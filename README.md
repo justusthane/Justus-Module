@@ -12,3 +12,25 @@ If you've installed using the above method, you can update the module by running
 1. Download this repo as a ZIP file, and extract the script files to ~\Documents\WindowsPowerShell\modules\Justus-Module
 
 You should now be able to run any of the included cmdlets.
+
+## cmdlets
+
+**Run `get-help cmdlet` for more documentation about a specific cmdlet**
+
+### Generate-VMRDP
+Generates RDP connections and a spreadsheet for all Windows VMs in specific resource pools
+
+### Get-IPInfo
+Returns info from ipinfo.io for given IP address (or your own IP address, with no arguments)
+
+### Remove-Emails
+Takes a CSV of delivered emails from Barracuda and removes them from Exchange mailboxes. Works both on-prem and on O365, but has to be run separately in each premise.
+
+### Find-ADUser
+A wrapper around Get-ADUser that searches multiple attributes (name, display name, email addresses, etc) all at once for the given search string.
+
+### Get-MigrationBatchStatus
+Returns the status of all mailboxes in a given migration batch, including whether there are any errors or skipped items.
+
+### Get-SkippedItems
+Returns all skipped items for all mailboxes in a given migration batch.
