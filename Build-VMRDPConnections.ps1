@@ -11,9 +11,22 @@ function Build-VMRDPConnections {
 
   OutputFolder defaults to current directory. Use -OutputFolder parameter to override.
 
-  By default fetches all Resource Pools. Use -ResourcePools paramater to specify resource pool(s).
+  By default fetches all Resource Pools. Use -ResourcePools parameter to specify resource pool(s). Alternatively, you can allow it to fetch all resource pools but specify pools to exclude using the -ExcludeResourcePools parameter
 
   Requires the PowerCLI module from VMware.
+
+  .Example
+  Build-VMRDPConnections -vCenterServer cc-vmcentre
+
+  The simplest form of the cmdlet will get all resource pools and use the current directory for the output.
+
+  .Example
+  Build-VMRDPConnections -vCenterServer cc-vmcentre -OutputFolder ~\Documents\ServerUpdates
+
+  Specify a different output folder.
+
+  .Example
+  Build-VMRDPConnections -vCenterServer cc-vmcentre -ResourcePools "Production (2 - Silver)","Production (1 - Gold)","Production (3 - Bronze)","Production (0 - VIP)","Test and Development","Utilities"
 
 
 #>
@@ -33,7 +46,9 @@ function Build-VMRDPConnections {
     # Specify the vCenter server to connect to.
     [string]$vCenterServer,
     # Specify resource pool(s) to fetch. By default, fetches all resource pools.
-    [array]$ResourcePools
+    [array]$ResourcePools,
+    # Specify resource pools to exclude
+    [array]$ExcludeResourcePools = @()
   )
 
   # Look for default RDP settings in current folder and then in ~\Documents. If neither exists,
@@ -112,8 +127,13 @@ function Build-VMRDPConnections {
     $ResourcePools = $ResourcePools | ForEach-Object { Get-ResourcePool $_ }
   }
 
-  $ResourcePools | ForEach-Object { 
-    Get-ResourcePool -Name $_ | ForEach-Object {
+  $ResourcePools | ForEach-Object {
+    If ($ExcludeResourcePools -NotContains "$($_.Name)") {
+      # Check if this resource pool has been excluded
+      #If ($ExcludeResourcePools.Contains($_.Name)) {
+      #  "Excluding pool $($_.Name)"
+      #  Continue
+      #}
       # Check whether output folders already exist before attempting to create.
       If (Test-Path -Path "$($OutputFolderObj.FullName)\$($_.Name)" -PathType Container) {
         $directory = Get-Item -Path "$($OutputFolderObj.FullName)\$($_.Name)"
