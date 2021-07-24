@@ -1,4 +1,4 @@
-A collection of PowerShell cmdlets which are useful mostly to me.
+A collection of PowerShell cmdlets which are useful mostly to me and maybe Sam.
 
 ## Installation
 ### Git clone (preferred method)
@@ -11,13 +11,11 @@ If you've installed using the above method, you can update the module by running
 ### Manual Installation
 1. Download this repo as a ZIP file, and extract the script files to ~\Documents\WindowsPowerShell\modules\Justus-Module
 
-You should now be able to run any of the included cmdlets.
+## Included cmdlets
 
-## cmdlets
+**Run `get-help <cmdlet>` for more documentation about a specific cmdlet**
 
-**Run `get-help cmdlet` for more documentation about a specific cmdlet**
-
-### Generate-VMRDP
+### Build-VMRDPConnections
 Generates RDP connections and a spreadsheet for all Windows VMs in specific resource pools
 
 ### Get-IPInfo
