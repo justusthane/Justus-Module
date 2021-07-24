@@ -5,16 +5,19 @@
   
   .Description
   By default, only a select subset of properties are returned. Use the -Properties parameter to specify which properties to return, or * for all.
+  
+  This cmdlet can also be handy for finding what user an email alias is attached to. Just specify the alias as the search string.
 
   .Example
   Find-ADUser jbad
 
-  Search for a user by part of their name (not that wildcards are not necessary)
+  Search for a user by part of their name (note that wildcards are not necessary).
 
   .Example
   Find-ADUser -SearchString jbad -Properties DisplayName,SAMAccountName,MemberOf
 
-  Specify which properties to return
+  Specify which properties to return. By default, it returns DisplayName, Name, and SAMAccountName.
+  
   .Example 
   Find-ADUser shurget@confederation
 
@@ -22,7 +25,7 @@
   -----------              ----     --------------
   jbadergr (Justus Grunow) jbadergr jbadergr
 
-  Because the command also searches proxyAddresses, it can be used to find out what user a specific email address is attached to:
+  Because the command also searches proxyAddresses, it can be used to find out what user a specific email address is attached to.
 
 
 #>
