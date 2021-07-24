@@ -1,3 +1,4 @@
+function Find-ADUser {
 <#
   .Synopsis
   Find-ADUser is a wrapper for Get-ADUser which searches a set of attributes using a single search string.
@@ -29,7 +30,6 @@
 
 
 #>
-function Find-ADUser {
   [CmdletBinding()]
   param (
     [Parameter(Mandatory)]
