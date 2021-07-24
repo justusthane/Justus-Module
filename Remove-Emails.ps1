@@ -1,4 +1,24 @@
 function Remove-Emails {
+  <#
+    .Synopsis
+    This cmdlet is designed to take a CSV of emails output from Barracuda and remove them
+    from Exchange mailboxes, on-prem or O365.
+
+    .Description
+    In the event that a phishing email gets through Barracuda, you can export a CSV of the
+    delivered messages (hint: export from appliance, not CPL). Running this cmdlet on the CSV
+    will remove the delivered messages from each mailbox they were sent to.
+
+    This is much faster than searching all mailboxes for a given email, as it only operates
+    on mailboxes that actually received the email.
+
+    It can be used for both on-prem Exchange and Exchange Online, but must be run separately for
+    each premises. It will let you know if there are mailboxes in the other premise that also need to be searched.
+
+    For on-prem, it must be run within the Exchange Management Shell. For Exchange Online/O365, it requires
+    the Exchange Online Management module.
+
+  #>
   param (
     [Parameter(Mandatory)]
     [ValidateScript({
@@ -10,8 +30,11 @@ function Remove-Emails {
       }
       return $true
     })]
+    # Specify the path to the input CSV
     [System.IO.FileInfo]$InputCsv,
+    # Only search mailboxes, do not remove emails.
     [switch]$WhatIf,
+    # Don't prompt for each mailbox.
     [switch]$Force
   )
 
@@ -58,12 +81,14 @@ function Remove-Emails {
     Search-Mailbox @Arguments
   }
   Write-Host "The messages should have been deleted."
-  Write-Host "Some mailboxes could not be searched" -ForegroundColor "Yellow"
-  Write-Host "The following mailboxes are in the other premises, so please run this script again there to delete those messages:`n"
-  Write-Host "E.g. If you're running this on Office365, please run again on-prem, or vice versa.`n"
+  If ($offPrem) { 
+    Write-Host "Some mailboxes could not be searched due to being in the other premises." 
+    Write-Host "The following mailboxes are located in the other premises and could not be searched. Please run this cmdlet again in the other premises to delete those messages:`n" -ForegroundColor "Yellow"
+    Write-Host "E.g. If you're running this on Office365, please run again on-prem, or vice versa.`n"
 
-  $offPrem | ForEach {
-    $_.To
+    $offPrem | ForEach {
+      $_.To
+    }
   }
 
 }
