@@ -9,6 +9,10 @@ function Build-VMRDPConnections {
 
   The RDP connection details can be customimzed by placing a "Default.rdp" file in the current directory. If that doesn't exist, it will check for ~\Documents\Default.rdp (which is the default location for RDP default settings). If neither exists, it will use its own defaults.
 
+  OutputFolder defaults to current directory. Use -OutputFolder parameter to override.
+
+  By default fetches all Resource Pools. Use -ResourcePools paramater to specify resource pool(s).
+
   Requires the PowerCLI module from VMware.
 
 
@@ -27,9 +31,13 @@ function Build-VMRDPConnections {
     [System.IO.FileInfo]$OutputFolder = ".",
     [Parameter(Mandatory)]
     # Specify the vCenter server to connect to.
-    [string]$vCenterServer
+    [string]$vCenterServer,
+    # Specify resource pool(s) to fetch. By default, fetches all resource pools.
+    [array]$ResourcePools
   )
 
+  # Look for default RDP settings in current folder and then in ~\Documents. If neither exists,
+  # use built-in defaults.
   If (Test-Path "Default.rdp") {
     $rdpParameters = Get-Content "Default.rdp"
   } ElseIf (Test-Path "~\Documents\Default.rdp") {
@@ -83,28 +91,38 @@ function Build-VMRDPConnections {
   }
 
 
-  $resourcePools = ('Production (0 - VIP)',
-                    'Production (1 - Gold)',
-                    'Production (2 - Silver)',
-                    'Production (3 - Bronze)',
-                    'Test and Development',
-                    'Utilities' )
+  #$resourcePools = ('Production (0 - VIP)',
+  #                  'Production (1 - Gold)',
+  #                  'Production (2 - Silver)',
+  #                  'Production (3 - Bronze)',
+  #                  'Test and Development',
+  #                  'Utilities' )
 
   connect-viserver $vCenterServer
-  $OutputDir = Get-Item -Path "$OutputFolder"
-  "Path: $($OutputDir)"
 
-  $resourcePools | ForEach-Object { 
+  # Transform the specified output path into an actual path object. Setting it to a different
+  # variable is a bit of a hack - for some reason, setting it to itself doesn't work.
+  $OutputFolderObj = Get-Item -Path "$OutputFolder"
+
+  # If -ResourcePools parameter isn't specified, get all resource pools.
+  If (! $ResourcePools) {
+    $ResourcePools = Get-ResourcePool
+  # If -ResourcePools is specified, then get those resource pools dammit.
+  } Else {
+    $ResourcePools = $ResourcePools | ForEach-Object { Get-ResourcePool $_ }
+  }
+
+  $ResourcePools | ForEach-Object { 
     Get-ResourcePool -Name $_ | ForEach-Object {
-      # TODO: Check if directories already exist before trying to create them
-      If (Test-Path -Path "$($OutputDir.FullName)\$($_.Name)" -PathType Container) {
-        "$($OutputDir.FullName)\$($_.Name) exists"
-        $directory = Get-Item -Path "$($OutputDir.FullName)\$($_.Name)"
+      # Check whether output folders already exist before attempting to create.
+      If (Test-Path -Path "$($OutputFolderObj.FullName)\$($_.Name)" -PathType Container) {
+        $directory = Get-Item -Path "$($OutputFolderObj.FullName)\$($_.Name)"
       } Else { 
-         "$($OutputDir.FullName)\$($_.Name) does not exist"
-        $directory = New-Item -ItemType Directory -Path $OutputDir.FullName -Name $_.Name
+        $directory = New-Item -ItemType Directory -Path $OutputFolderObj.FullName -Name $_.Name
       }
+      # Initialize an empty array for the spreadsheet for the current resource pool
       $vmInfo = @()
+      #Get all VMs in the current resource pool
       $_ | get-vm | ForEach-Object {
         If (($_.PowerState -eq "PoweredOn") -And ($_.GuestID -like "*Windows*")) {
           $vmInfo += $_ | select Name,"Downloading","Installing","Pending Reboot","Done","Notes","ERROR"
