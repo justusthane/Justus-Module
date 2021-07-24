@@ -48,7 +48,7 @@ username:s:confederationc.on.ca\jbadergr
 drivestoredirect:s:
 "@
 
-function Generate-VMRDP {
+function Build-VMRDPConnections {
   param (
     [Parameter(Mandatory)]
     [ValidateScript({
