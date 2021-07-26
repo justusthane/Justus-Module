@@ -1,17 +1,17 @@
 A collection of PowerShell cmdlets which are useful mostly to me and maybe Sam.
 
-## Installation
-### Git clone (preferred method)
+# Installation
+## Git clone (preferred method)
 1. Create an empty directory called "Justus-Module" in ~\Documents\WindowsPowerShell\modules
 2. `git clone https://github.com/justusthane/Justus-Module.git ~\Documents\WindowsPowerShell\modules\Justus-Module`
 
-#### Updating
+### Updating
 If you've installed using the above method, you can update the module by running `git pull` within the Justus-Module directory.
 
-### Manual Installation
+## Manual Installation
 1. Download this repo as a ZIP file, and extract the script files to ~\Documents\WindowsPowerShell\modules\Justus-Module
 
-## Included cmdlets
+# Included cmdlets
 
 **Run `get-help <cmdlet>` for more documentation about a specific cmdlet**
 
