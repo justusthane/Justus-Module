@@ -2,10 +2,8 @@ A collection of PowerShell cmdlets which are useful mostly to me and maybe Sam.
 
 # Installation
 ## Git clone (preferred method)
-1. Create an empty directory called "Justus-Module" in ~\Documents\WindowsPowerShell\modules
-2. `cd` to the new Justus-Module directory and run the following command (requires git):
- 
-    `git clone https://github.com/justusthane/Justus-Module.git ~\Documents\WindowsPowerShell\modules\Justus-Module`
+1. Create an empty directory called "Justus-Module" in ~\Documents\WindowsPowerShell\modules (create the path if it doesn't exist).
+2. Run the following command (requires git): `git clone https://github.com/justusthane/Justus-Module.git ~\Documents\WindowsPowerShell\modules\Justus-Module`
 
 ### Updating
 If you've installed using the above method, you can update the module by running `git pull` within the Justus-Module directory.
@@ -18,7 +16,7 @@ If you've installed using the above method, you can update the module by running
 **Run `get-help <cmdlet>` for more documentation about a specific cmdlet**
 
 ### Build-VMRDPConnections
-Generates RDP connections and a spreadsheet for all Windows VMs in specific resource pools
+Generates RDP connections and a spreadsheet for all Windows VMs in specific (or all) resource pools. Useful for making Windows Server updates easier.
 
 ### Get-IPInfo
 Returns info from ipinfo.io for given IP address (or your own IP address, with no arguments)
