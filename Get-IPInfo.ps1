@@ -10,5 +10,5 @@ function Get-IPInfo {
    # Specify the IP address
    [string]$IPAddress
  )
- curl https://ipinfo.io/$IPAddress | ConvertFrom-Json
+ curl https://ipinfo.io/$IPAddress -s | ConvertFrom-Json
 }
