@@ -38,7 +38,7 @@ function Remove-Emails {
     [switch]$Force
   )
 
-  $toDelete = Import-Csv $InputCsv | Where {$_.Action -eq "Allowed" -And $_."Delivery Status" -eq "Delivered" } 
+  $toDelete = Import-Csv $InputCsv | Where {$_.Action -eq "Allowed" -And $_."Delivery Status" -eq "Delivered" -And ( $_.To -Like "*@confederationcollege.ca" -Or $_.To -Like "*@confederationc.on.ca" ) } 
 
   $onPrem = @()
   $offPrem = @()
@@ -53,7 +53,7 @@ function Remove-Emails {
   }
 
   $onPrem | ForEach {
-    $_ | select Time,From,To,Subject,Action,"Delivery Status"
+    $_ | select @{l="Time";e={Get-Date -Date $_.Time -Format 'yyyy-MM-dd'}},From,To,Subject,Action,"Delivery Status"
   } | ft
 
   Write-Host "Emails matching the above will be deleted.`n"
