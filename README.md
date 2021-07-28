@@ -32,3 +32,10 @@ Returns the status of all mailboxes in a given migration batch, including whethe
 
 ### Get-SkippedItems
 Returns all skipped items for all mailboxes in a given migration batch.
+
+### Start-ADSync
+Initiates an Azure AD sync on the target server (target server must be running the AD Sync application).
+
+```powershell
+Start-ADSync -ComputerName ad-connect
+```
