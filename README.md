@@ -27,6 +27,8 @@ Takes a CSV of delivered emails from Barracuda and removes them from Exchange ma
 ### Find-ADUser
 A wrapper around Get-ADUser that searches multiple attributes (name, display name, email addresses, etc) all at once for the given search string.
 
+Also displays whether a user's mailbox is on-prem or Office365.
+
 ### Get-MigrationBatchStatus
 Returns the status of all mailboxes in a given migration batch, including whether there are any errors or skipped items.
 
