@@ -30,6 +30,43 @@ function Find-AzureADDevice {
 
     Also accepts pipeline input.
 
+    .EXAMPLE
+    Find-AzureADDevice fflab-c166* | ft ComputerName,DisplayName,IsManaged,ProfileType
+
+    ComputerName  DisplayName    IsManaged ProfileType
+    ------------  -----------    --------- -----------
+    FFLAB-C166-07 FFLAB-C166-07       True RegisteredDevice
+    FFLAB-C166-08 FFLAB-C166-08       True RegisteredDevice
+    FFLAB-C166-09 MININT-2M3M7FQ      True RegisteredDevice
+    FFLAB-C166-10 MININT-G7QBGH2      True RegisteredDevice
+    FFLAB-C166-11 FFLAB-C166-11       True RegisteredDevice
+    FFLAB-C166-12 FFLAB-C166-12       True RegisteredDevice
+    FFLAB-C166-13 MININT-HU9MN1A      True RegisteredDevice
+    FFLAB-C166-14 MININT-H7O02VG      True RegisteredDevice
+    FFLAB-C166-15 FFLAB-C166-15       True RegisteredDevice
+    FFLAB-C166-16 MININT-LG397OO      True RegisteredDevice
+    
+    An example showing how it can be used for finding machines when the Azure hostname doesn't match the AD hostname.
+
+    .EXAMPLE
+    Find-AzureADDevice fflab-166* | ft ComputerName,DisplayName,IsManaged,ProfileType
+
+    ComputerName DisplayName   IsManaged ProfileType
+    ------------ -----------   --------- -----------
+    FFLAB-166-01 FFLAB-166-01       True RegisteredDevice
+    FFLAB-166-02 FFLAB-166-02       True RegisteredDevice
+    FFLAB-166-03 FFLAB-166-03$
+    FFLAB-166-04 FFLAB-166-04       True RegisteredDevice
+    FFLAB-166-05 FFLAB-166-05$
+    FFLAB-166-06 FFLAB-166-06$
+    FFLAB-166-07 FFLAB-166-07       True RegisteredDevice
+    FFLAB-166-08 FFLAB-166-08       True RegisteredDevice
+    FFLAB-166-09 FFLAB-166-09$
+    FFLAB-166-10 FFLAB-166-10       True RegisteredDevice
+    FFLAB-166-11 FFLAB-166-11$
+    FFLAB-166-12 FFLAB-166-12$
+
+    Useful for finding machines that aren't registered in Azure properly.
   #>
   Param (
     [Parameter(Mandatory,ValueFromPipeline=$true)]
