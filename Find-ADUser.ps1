@@ -11,10 +11,22 @@ function Find-ADUser {
   
   This cmdlet can also be handy for finding what user an email alias is attached to. Just specify the alias as the search string.
 
+  The cmdlet will also accept an array of search strings, to search for multiple users at once.
+
   .Example
   Find-ADUser jbad
 
-  Search for a user by part of their name (note that wildcards are not necessary).
+  Search for a user by part of their name (note that wildcards are added automatically and are not necessary).
+
+  .Example
+  Find-ADUser jbadergr,swoobec
+
+  Search for multiple users by passing an array.
+
+  .Example
+  "jbadergr","swoodbec" | Find-ADUser
+
+  Also accepts pipeline input.
 
   .Example
   Find-ADUser -SearchString jbad -Properties DisplayName,SAMAccountName,MemberOf
@@ -34,18 +46,30 @@ function Find-ADUser {
 #>
   [CmdletBinding()]
   param (
-    [Parameter(Mandatory)]
-    # Specify the search string
-    [string]$SearchString,
+    [Parameter(Mandatory,ValueFromPipeline=$true)]
+    # Specify the search string, or array of search strings.
+    [array]$SearchString,
     # Specify which properties to return, or * for all
     # 
     [array]$Properties = ("DisplayName","SAMAccountName","Description","PasswordLastSet","PasswordExpired","Enabled","LockedOut")
   )
+
+  BEGIN {
   $searchAttributes = "DisplayName -like '*$searchString*' `
     -or Name -like '*$searchString*' `
     -or proxyAddresses -like '*$SearchString*'"
+  }
 
 
-  Get-ADUser -filter $searchAttributes -Properties $($Properties + "msExchRecipientDisplayType") | 
-  Select-Object -Property $($Properties + @{l='MailboxLocation';e={If ($_.msExchRecipientDisplayType -eq "1073741824"){"On-prem"} ElseIf ($_.msExchRecipientDisplayType -eq "-2147483642"){"O365"}}})
+  PROCESS {
+    $SearchString | ForEach-Object {
+    $searchAttributes = "DisplayName -like '*$_*' `
+      -or Name -like '*$_*' `
+      -or proxyAddresses -like '*$_*'";
+    Get-ADUser -filter $searchAttributes -Properties $($Properties + "msExchRecipientDisplayType") | 
+    Select-Object -Property $($Properties + @{l='MailboxLocation';e={If ($_.msExchRecipientDisplayType -eq "1073741824"){"On-prem"} ElseIf ($_.msExchRecipientDisplayType -eq "-2147483642"){"O365"}}})
+    }
+  }
+
+  END {}
 }
