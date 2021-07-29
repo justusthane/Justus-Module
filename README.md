@@ -14,6 +14,8 @@ If you've installed using the above method, you can update the module by running
 # Included cmdlets
 
 **Run `get-help <cmdlet>` for more documentation about a specific cmdlet**. All cmdlets also provide examples with `get-help <cmdlet> -examples`.
+### New-Array
+A cute little helper cmdlet that takes the pain out of generating new arrays on the fly.
 
 ### Build-VMRDPConnections
 Generates RDP connections and a spreadsheet for all Windows VMs in specific (or all) resource pools. Useful for making Windows Server updates easier.
