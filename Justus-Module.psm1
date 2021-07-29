@@ -11,25 +11,26 @@ function New-Array {
 
     .DESCRIPTION
 
-    When testing cmdlets, you might generate an array of elements something like this:
+    You might sometimes have the need to generate an array on the fly, doing something like this:
 
-    PS> jbadergr","joesmith" | find-aduser
+    PS >"jbadergr","joesmith","fred flintstone" | find-aduser
 
     But who likes typing all those quotes and commas? Not me!
 
     This cmdlet allows you to the following instead:
 
-    PS> New-Array | find-aduser
+    PS >New-Array | find-aduser
 
     It will then prompt you to add new array elements, one per line, no quotes or commas needed! 
 
     .EXAMPLE
     New-Array | find-aduser
-
+    
+    ===OUTPUT===
     Enter array elements one line at a time. Press enter on an empty line when done.
     jbadergr
-    swoodbec
-
+    joesmith
+    fred flintstone
 
 
     DisplayName     : jbadergr (Justus Grunow)
