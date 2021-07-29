@@ -13,7 +13,7 @@ If you've installed using the above method, you can update the module by running
 
 # Included cmdlets
 
-**Run `get-help <cmdlet>` for more documentation about a specific cmdlet**
+**Run `get-help <cmdlet>` for more documentation about a specific cmdlet**. All cmdlets also provide examples with `get-help <cmdlet> -examples`.
 
 ### Build-VMRDPConnections
 Generates RDP connections and a spreadsheet for all Windows VMs in specific (or all) resource pools. Useful for making Windows Server updates easier.
@@ -26,6 +26,8 @@ Takes a CSV of delivered emails from Barracuda and removes them from Exchange ma
 
 ### Find-ADUser
 A wrapper around Get-ADUser that searches multiple attributes (name, display name, email addresses, etc) all at once for the given search string.
+
+Also displays whether a user's mailbox is on-prem or Office365.
 
 ### Get-MigrationBatchStatus
 Returns the status of all mailboxes in a given migration batch, including whether there are any errors or skipped items.
