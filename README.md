@@ -29,6 +29,9 @@ A wrapper around Get-ADUser that searches multiple attributes (name, display nam
 
 Also displays whether a user's mailbox is on-prem or Office365.
 
+### Find-AzureADDevice
+Searches AD for a computer or computers (if passed an array of search strings), and returns the corresponding Azure AD devices.
+
 ### Get-MigrationBatchStatus
 Returns the status of all mailboxes in a given migration batch, including whether there are any errors or skipped items.
 

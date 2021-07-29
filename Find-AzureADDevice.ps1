@@ -1,7 +1,7 @@
 function Find-AzureADDevice {
   <# 
     .SYNOPSIS
-    Returns the matching Azure AD Devices for an AD computer (or array of AD computers)
+    Searches AD for a computer (or computers) and returns the corresponding AzureAD devices.
 
     .DESCRIPTION
     It can sometimes be difficult to match Azure AD Devices with AD Computers, as the hostnames don't always match, and searching by GUID is cumbersome.
