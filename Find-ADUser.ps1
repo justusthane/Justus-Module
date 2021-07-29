@@ -5,7 +5,9 @@ function Find-ADUser {
 
   
   .Description
-  By default, only a select subset of properties are returned. Use the -Properties parameter to specify which properties to return, or * for all.
+  By default, only a default subset of properties are returned. Use the -Properties parameter to specify which properties to return, or * for all.
+
+  It also adds a property called "MailboxLocation" that indicates whether the mailbox is on-prem or O365. This works by looking at the msExchRecipientDisplayType AD attribute, which doesn't seem to be well-documented, but after testing seems to work correctly.
   
   This cmdlet can also be handy for finding what user an email alias is attached to. Just specify the alias as the search string.
 
@@ -37,11 +39,13 @@ function Find-ADUser {
     [string]$SearchString,
     # Specify which properties to return, or * for all
     # 
-    [array]$Properties = ("DisplayName","Name","SAMAccountName")
+    [array]$Properties = ("DisplayName","SAMAccountName","Description","PasswordLastSet","PasswordExpired","Enabled","LockedOut")
   )
   $searchAttributes = "DisplayName -like '*$searchString*' `
     -or Name -like '*$searchString*' `
     -or proxyAddresses -like '*$SearchString*'"
 
-  Get-ADUser -filter $searchAttributes -Properties $Properties | Select-Object -Property $Properties
+
+  Get-ADUser -filter $searchAttributes -Properties $($Properties + "msExchRecipientDisplayType") | 
+  Select-Object -Property $($Properties + @{l='MailboxLocation';e={If ($_.msExchRecipientDisplayType -eq "1073741824"){"On-prem"} ElseIf ($_.msExchRecipientDisplayType -eq "-2147483642"){"O365"}}})
 }
