@@ -46,3 +46,7 @@ Initiates an Azure AD sync on the target server (target server must be running t
 ```powershell
 Start-ADSync -ComputerName ad-connect
 ```
+
+## Coming Soon
+### Test-Speed
+Runs a series of internet speed tests at the provided interval/start/stop times, using speedtest.net's command-line utility.
