@@ -39,6 +39,7 @@ function Get-IPInfo {
     }
 
 
+# Get associated ASN info from cymru.com.
 # whois.cymru.com doesn't supply an API we can use, so we'll scrape the HTML instead.
 # Fetch the website, and save session info (cookies, etc) to $webSession variable
     $response = Invoke-WebRequest https://whois.cymru.com/ -SessionVariable $webSession
