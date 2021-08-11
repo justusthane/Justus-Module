@@ -1,3 +1,6 @@
+# TODO
+# - Use ARIN's RDAP API instead of RWS, which is deprecated
+
 function Get-IPInfo {
   <#
     .Synopsis
