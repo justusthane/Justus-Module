@@ -8,6 +8,8 @@ function Get-IPInfo {
 
     .Description
     This cmdlet queries various sources (currently ARIN and cymru.com) for information about a given IP, including WHOIS and ASN info.
+
+    This cmdlet is brittle as it relies on parsing HTML, and may break if the websites it scrapes change their format. If so, please submit an issue on the repo (https://github.com/justusthane/Justus-Module) and I'll fix it (or fix it yourself and submit a PR)
 #>
     param (
 # Specify the IP address
