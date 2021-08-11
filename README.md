@@ -17,13 +17,13 @@ If you've installed using the above method, you can update the module by running
 ### New-Array
 A cute little helper cmdlet that takes the pain out of generating new arrays on the fly.
 
-### Build-VMRDPConnections
+### Write-VMRDPConnection
 Generates RDP connections and a spreadsheet for all Windows VMs in specific (or all) resource pools. Useful for making Windows Server updates easier.
 
 ### Get-IPInfo
 Returns info from ipinfo.io for given IP address (or your own IP address, with no arguments)
 
-### Remove-Emails
+### Remove-Email
 Takes a CSV of delivered emails from Barracuda and removes them from Exchange mailboxes. Works both on-prem and on O365, but has to be run separately in each premise.
 
 ### Find-ADUser
@@ -37,7 +37,7 @@ Searches AD for a computer or computers (if passed an array of search strings), 
 ### Get-MigrationBatchStatus
 Returns the status of all mailboxes in a given migration batch, including whether there are any errors or skipped items.
 
-### Get-SkippedItems
+### Get-SkippedItem
 Returns all skipped items for all mailboxes in a given migration batch.
 
 ### Start-ADSync

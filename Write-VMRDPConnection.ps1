@@ -1,9 +1,8 @@
-function Build-VMRDPConnections {
+function Write-VMRDPConnection {
 <#
   .Synopsis
   Generate RDP connection files and a spreadsheet for all powered-on Windows VMs, divided by resource pool.
 
-  
   .Description
   This cmdlet fetches all powered on Windows servers from vSphere and creates an RDP file for each one, divided by resource pool. It also writes a spreadsheet for each resource pool, meant to facilitate performing and tracking Windows Updates.
 
@@ -137,7 +136,7 @@ function Build-VMRDPConnections {
       # Check whether output folders already exist before attempting to create.
       If (Test-Path -Path "$($OutputFolderObj.FullName)\$($_.Name)" -PathType Container) {
         $directory = Get-Item -Path "$($OutputFolderObj.FullName)\$($_.Name)"
-      } Else { 
+      } Else {
         $directory = New-Item -ItemType Directory -Path $OutputFolderObj.FullName -Name $_.Name
       }
       # Initialize an empty array for the spreadsheet for the current resource pool
@@ -145,12 +144,11 @@ function Build-VMRDPConnections {
       #Get all VMs in the current resource pool
       $_ | get-vm | ForEach-Object {
         If (($_.PowerState -eq "PoweredOn") -And ($_.GuestID -like "*Windows*")) {
-          $vmInfo += $_ | select Name,"Downloading","Installing","Pending Reboot","Done","Notes","ERROR"
+          $vmInfo += $_ | Select-Object Name,"Downloading","Installing","Pending Reboot","Done","Notes","ERROR"
           $rdpParameters + "full address:s:$($_.Name)" | Out-File "$($directory.FullName)\$($_.Name).rdp"
         }
       }
-      $vmInfo | sort Name | Export-Csv -Path "$($directory.FullName)\$($_.Name).csv" -NoTypeInformation
+      $vmInfo | Sort-Object Name | Export-Csv -Path "$($directory.FullName)\$($_.Name).csv" -NoTypeInformation
     }
   }
 }
-

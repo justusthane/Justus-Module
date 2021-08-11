@@ -6,7 +6,7 @@ function Get-MigrationBatchStatus {
   get-migrationuser -BatchId $BatchID | sort DataConsistencyScore | select Identity,Status,ErrorSummary,DataConsistencyScore,HasUnapprovedSkippedItems
 }
 
-function Get-SkippedItems {
+function Get-SkippedItem {
   param (
     $BatchID
   )
