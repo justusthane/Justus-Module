@@ -1,5 +1,5 @@
 function Find-AzureADDevice {
-  <# 
+  <#
     .SYNOPSIS
     Searches AD for a computer (or computers) and returns the corresponding AzureAD devices.
 
@@ -45,7 +45,7 @@ function Find-AzureADDevice {
     FFLAB-C166-14 MININT-H7O02VG      True RegisteredDevice
     FFLAB-C166-15 FFLAB-C166-15       True RegisteredDevice
     FFLAB-C166-16 MININT-LG397OO      True RegisteredDevice
-    
+
     An example showing how it can be used for finding machines when the Azure hostname doesn't match the AD hostname.
 
     .EXAMPLE
@@ -77,8 +77,8 @@ function Find-AzureADDevice {
     }
 
   Process {
-    $SearchString | ForEach-Object { get-adcomputer -filter 'name -like $_' } | 
-    ForEach-Object { $ComputerName = $_.Name; get-azureaddevice -filter "deviceId eq guid'$($_.ObjectGuid)'" | 
+    $SearchString | ForEach-Object { get-adcomputer -filter 'name -like $_' } |
+    ForEach-Object { $ComputerName = $_.Name; get-azureaddevice -filter "deviceId eq guid'$($_.ObjectGuid)'" |
     Select-Object @{l="ComputerName";e={$ComputerName}},* -ExcludeProperty AlternativeSecurityIds,DevicePhysicalIds }
   }
 

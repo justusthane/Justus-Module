@@ -25,7 +25,7 @@ function Get-IPInfo {
         )
 
     BEGIN {}
-    
+
     PROCESS {
       $IPAddress | ForEach-Object {
     # Get the network info from ARIN
