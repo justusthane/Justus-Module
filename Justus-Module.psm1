@@ -42,8 +42,17 @@ function New-Array {
     LockedOut       : False
     MailboxLocation : O365
 
-    DisplayName     : swoodbec (Sam Woodbeck)
-    SAMAccountName  : swoodbec
+    DisplayName     : jsmith (Joe Smith)
+    SAMAccountName  : jsmith
+    Description     : Staff Account 2015
+    PasswordLastSet : 2/22/2021 8:34:53 AM
+    PasswordExpired : False
+    Enabled         : True
+    LockedOut       : False
+    MailboxLocation : O365
+    
+    DisplayName     : fflintstone (Fred Flintstone)
+    SAMAccountName  : fflintstone
     Description     : Staff Account 2015
     PasswordLastSet : 2/22/2021 8:34:53 AM
     PasswordExpired : False
