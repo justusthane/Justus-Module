@@ -10,7 +10,10 @@ function Get-IPInfo {
 # Specify the IP address
         [string]$IPAddress
         )
+    
+    # Get the network info from ARIN
     $net = [xml]$(Invoke-WebRequest http://whois.arin.net/rest/ip/$IPAddress) | Select-Object -expand Net
+    # Get the organization associated with the network from ARIN
     $org = [xml]$(Invoke-WebRequest $($net.orgRef."#text")) | Select-Object -expand Org
 
 # whois.cymru.com doesn't supply an API we can use, so we'll scrape the HTML instead.
