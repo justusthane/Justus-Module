@@ -1,4 +1,4 @@
-function Remove-Email {
+function Remove-BarracudaEmail {
   <#
     .Synopsis
     This cmdlet is designed to take a CSV of emails output from Barracuda and remove them

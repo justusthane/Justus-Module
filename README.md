@@ -21,9 +21,9 @@ A cute little helper cmdlet that takes the pain out of generating new arrays on 
 Generates RDP connections and a spreadsheet for all Windows VMs in specific (or all) resource pools. Useful for making Windows Server updates easier.
 
 ### Get-IPInfo
-Returns info from ipinfo.io for given IP address (or your own IP address, with no arguments)
+Returns info for given IP address, including registration and ASN info.
 
-### Remove-Email
+### Remove-BarracudaEmail
 Takes a CSV of delivered emails from Barracuda and removes them from Exchange mailboxes. Works both on-prem and on O365, but has to be run separately in each premise.
 
 ### Find-ADUser
