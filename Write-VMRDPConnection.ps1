@@ -50,6 +50,11 @@ function Write-VMRDPConnection {
     [array]$ExcludeResourcePools = @()
   )
 
+  # This is some stupid shit to make PSScriptAnalyzer happy. It doesn't search in script blocks,
+  # so without this is throws a warning about an unused parameter.
+  # https://github.com/PowerShell/PSScriptAnalyzer/issues/1472
+  $ExcludeResourcePools | Out-Null
+
   # Look for default RDP settings in current folder and then in ~\Documents. If neither exists,
   # use built-in defaults.
   If (Test-Path "Default.rdp") {

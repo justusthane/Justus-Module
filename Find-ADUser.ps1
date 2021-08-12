@@ -54,6 +54,11 @@ function Find-ADUser {
   )
 
   BEGIN {
+  # This is some stupid shit to make PSScriptAnalyzer happy. It doesn't search in script blocks,
+  # so without this is throws a warning about an unused parameter.
+  # https://github.com/PowerShell/PSScriptAnalyzer/issues/1472
+  $Properties | Out-Null
+
   $searchAttributes = "DisplayName -like '*$searchString*' `
     -or Name -like '*$searchString*' `
     -or proxyAddresses -like '*$SearchString*'"
