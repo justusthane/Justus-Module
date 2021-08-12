@@ -30,7 +30,7 @@ function Find-ADUser {
   .Example
   Find-ADUser -SearchString jbad -Properties DisplayName,SAMAccountName,MemberOf
 
-  Specify which properties to return. By default, it returns DisplayName, Name, and SAMAccountName.
+  Specify additional properties to return. Can specify * for all.
 
   .Example
   Find-ADUser shurget@confederation
@@ -50,14 +50,11 @@ function Find-ADUser {
     [array]$SearchString,
     # Specify which properties to return, or * for all
     #
-    [array]$Properties = ("DisplayName","SAMAccountName","Description","PasswordLastSet","PasswordExpired","Enabled","LockedOut")
+    [array]$Properties = @()
   )
 
   BEGIN {
-  # This is some stupid shit to make PSScriptAnalyzer happy. It doesn't search in script blocks,
-  # so without this is throws a warning about an unused parameter.
-  # https://github.com/PowerShell/PSScriptAnalyzer/issues/1472
-  $Properties | Out-Null
+  $AdditionalProperties = ("DisplayName","SAMAccountName","Description","PasswordLastSet","PasswordExpired","Enabled","LockedOut") + $Properties
 
   $searchAttributes = "DisplayName -like '*$searchString*' `
     -or Name -like '*$searchString*' `
@@ -70,8 +67,8 @@ function Find-ADUser {
     $searchAttributes = "DisplayName -like '*$_*' `
       -or Name -like '*$_*' `
       -or proxyAddresses -like '*$_*'";
-    Get-ADUser -filter $searchAttributes -Properties $($Properties + "msExchRecipientDisplayType") |
-    Select-Object -Property $($Properties + @{l='MailboxLocation';e={If ($_.msExchRecipientDisplayType -eq "1073741824"){"On-prem"} ElseIf ($_.msExchRecipientDisplayType -eq "-2147483642"){"O365"}}})
+    Get-ADUser -filter $searchAttributes -Properties $($AdditionalProperties + "msExchRecipientDisplayType") |
+    Select-Object -Property $($AdditionalProperties + @{l='MailboxLocation';e={If ($_.msExchRecipientDisplayType -eq "1073741824"){"On-prem"} ElseIf ($_.msExchRecipientDisplayType -eq "-2147483642"){"O365"}}})
     }
   }
 
