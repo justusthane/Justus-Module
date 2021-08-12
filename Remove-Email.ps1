@@ -19,6 +19,8 @@ function Remove-Email {
     the Exchange Online Management module.
 
   #>
+
+  [CmdletBinding(SupportsShouldProcess)]
   param (
     [Parameter(Mandatory)]
     [ValidateScript({
@@ -32,18 +34,16 @@ function Remove-Email {
     })]
     # Specify the path to the input CSV
     [System.IO.FileInfo]$InputCsv,
-    # Only search mailboxes, do not remove emails.
-    [switch]$WhatIf,
-    # Don't prompt for each mailbox.
+    # Specify -Force to prevent prompting for each mailbox
     [switch]$Force
   )
 
-  $toDelete = Import-Csv $InputCsv | Where {$_.Action -eq "Allowed" -And $_."Delivery Status" -eq "Delivered" -And ( $_.To -Like "*@confederationcollege.ca" -Or $_.To -Like "*@confederationc.on.ca" ) } 
+  $toDelete = Import-Csv $InputCsv | Where-Object {$_.Action -eq "Allowed" -And $_."Delivery Status" -eq "Delivered" -And ( $_.To -Like "*@confederationcollege.ca" -Or $_.To -Like "*@confederationc.on.ca" ) }
 
   $onPrem = @()
   $offPrem = @()
 
-  $toDelete | ForEach {
+  $toDelete | ForEach-Object {
     If ((get-recipient $_.To).RecipientType -eq "UserMailbox") {
       $onPrem += $_
     }
@@ -52,41 +52,44 @@ function Remove-Email {
     }
   }
 
-  $onPrem | ForEach {
-    $_ | select @{l="Time";e={Get-Date -Date $_.Time -Format 'yyyy-MM-dd'}},From,To,Subject,Action,"Delivery Status"
-  } | ft
+  $onPrem | ForEach-Object {
+    $_ | Select-Object @{l="Time";e={Get-Date -Date $_.Time -Format 'yyyy-MM-dd'}},From,To,Subject,Action,"Delivery Status"
+  } | Format-Table
 
-  Write-Host "Emails matching the above will be deleted.`n"
-  If ($WhatIf) { Write-Host "The script is in WhatIf mode. Items will not be deleted.`n" -ForegroundColor "Yellow" }
-  Write-Host "Warning: This script only considers the received date, not the time. Any emails matching the sender and subject on this date will be deleted.`n" -ForegroundColor "Yellow"
-  If ((-Not ($Force)) -And (-Not ($WhatIf))) { Write-Host "You did not specify -Force, so you will be prompted for each mailbox." }
+  Write-Information -InformationAction Continue "Emails matching the above will be deleted.`n"
+  If ($offPrem) {
+    Write-Information -InformationAction Continue "Additional mailboxes were found in the other premises. Please run script again there when done.`n"
+  }
+  Write-Warning "This script only considers the received date, not the time. Any emails matching the sender and subject on this date will be deleted.`n"
+  If ((-Not ($Force)) -And (-Not ($WhatIf))) { Write-Information -InformationAction Continue "You did not specify -Force, so you will be prompted for each mailbox." }
   If ($(Read-Host -prompt "Proceed? [Y/N]") -ne "Y" ) {
-    Write-Host "Aborting"
+    Write-Information -InformationAction Continue "Aborting"
     break
   }
-  
-  $onPrem | ForEach {
+
+  # These are needed to add "Yes to all"/"No to all" functionality
+  $yesToAll = $false
+  $noToAll = $false
+
+  $onPrem | ForEach-Object {
+    If ($Force -Or $PSCmdlet.ShouldContinue($_.To,"Delete messages",[ref]$yesToAll,[ref]$noToAll)) {
     $Arguments = @{
       Identity = $_.To
       SearchQuery = "Received:$(Get-Date -Date $_.Time -Format 'yyyy-MM-dd') and From:$($_.From) and Subject:$($_.Subject)"
-    }
-    If ($WhatIf) {
-      $Arguments.EstimateResultOnly = $True
-    } Else {
-      $Arguments.DeleteContent = $True
-    }
-    If ($Force) {
-      $Arguments.Force = $True
+      DeleteContent = $True
+      Force = $True
+      WarningAction = "SilentlyContinue"
     }
     Search-Mailbox @Arguments
+    }
   }
-  Write-Host "The messages should have been deleted."
-  If ($offPrem) { 
-    Write-Host "Some mailboxes could not be searched due to being in the other premises." 
-    Write-Host "The following mailboxes are located in the other premises and could not be searched. Please run this cmdlet again in the other premises to delete those messages:`n" -ForegroundColor "Yellow"
-    Write-Host "E.g. If you're running this on Office365, please run again on-prem, or vice versa.`n"
+  Write-Information -InformationAction Continue "The messages should have been deleted."
+  If ($offPrem) {
+    Write-Information -InformationAction Continue "Some mailboxes could not be searched due to being in the other premises."
+    Write-Information -InformationAction Continue "The following mailboxes are located in the other premises and could not be searched. Please run this cmdlet again in the other premises to delete those messages:`n"
+    Write-Information -InformationAction Continue "E.g. If you're running this on Office365, please run again on-prem, or vice versa.`n"
 
-    $offPrem | ForEach {
+    $offPrem | ForEach-Object {
       $_.To
     }
   }

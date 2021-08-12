@@ -3,7 +3,7 @@ function Get-MigrationBatchStatus {
     $BatchID
   )
   Check-LoadedModule "ExchangeOnlineManagement"
-  get-migrationuser -BatchId $BatchID | sort DataConsistencyScore | select Identity,Status,ErrorSummary,DataConsistencyScore,HasUnapprovedSkippedItems
+  get-migrationuser -BatchId $BatchID | Sort-Object DataConsistencyScore | Select-Object Identity,Status,ErrorSummary,DataConsistencyScore,HasUnapprovedSkippedItems
 }
 
 function Get-SkippedItem {
@@ -11,11 +11,11 @@ function Get-SkippedItem {
     $BatchID
   )
   Check-LoadedModule "ExchangeOnlineManagement"
-  get-migrationuser -BatchId $BatchID | 
-  ?{ $_.HasUnapprovedSkippedItems -eq $True } | 
-  Get-MigrationUserStatistics -IncludeSkippedItems | 
-  select -Expand SkippedItems @{label="UserIdentity";expression={$_.Identity}} | 
-  ? {$_.Kind -ne "CorruptFolderACL" } | 
-  select @{label="Identity";expression={$_.UserIdentity}},Kind,FolderName,Subject,DateReceived,@{label="MessageSizeMB";expression={$_.MessageSize/1024/1024}}
+  get-migrationuser -BatchId $BatchID |
+  Where-Object { $_.HasUnapprovedSkippedItems -eq $True } |
+  Get-MigrationUserStatistics -IncludeSkippedItems |
+  Select-Object -Expand SkippedItems @{label="UserIdentity";expression={$_.Identity}} |
+  Where-Object {$_.Kind -ne "CorruptFolderACL" } |
+  Select-Object @{label="Identity";expression={$_.UserIdentity}},Kind,FolderName,Subject,DateReceived,@{label="MessageSizeMB";expression={$_.MessageSize/1024/1024}}
 }
 

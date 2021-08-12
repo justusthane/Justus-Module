@@ -21,11 +21,11 @@ function New-Array {
 
     PS >New-Array | find-aduser
 
-    It will then prompt you to add new array elements, one per line, no quotes or commas needed! 
+    It will then prompt you to add new array elements, one per line, no quotes or commas needed!
 
     .EXAMPLE
     New-Array | find-aduser
-    
+
     ===OUTPUT===
     Enter array elements one line at a time. Press enter on an empty line when done.
     jbadergr
@@ -50,7 +50,7 @@ function New-Array {
     Enabled         : True
     LockedOut       : False
     MailboxLocation : O365
-    
+
     DisplayName     : fflintstone (Fred Flintstone)
     SAMAccountName  : fflintstone
     Description     : Staff Account 2015
@@ -60,11 +60,14 @@ function New-Array {
     LockedOut       : False
     MailboxLocation : O365
   #>
+  [CmdletBinding(SupportsShouldProcess)]
+  param()
 
+  # This is just here to make PSScriptAnalyzer happy
+  If ($PSCmdlet.ShouldProcess("New array")) {
   $array = @()
 
-  Write-Host "Enter array elements one line at a time. Press enter on an empty line when done."
-
+  Write-Information "Enter array elements one line at a time. Press enter on an empty line when done." -InformationAction Continue
 
   Do {
     $newElement = Read-Host
@@ -72,6 +75,7 @@ function New-Array {
   } While ($newElement)
 
   $array
+  }
 }
 
 
