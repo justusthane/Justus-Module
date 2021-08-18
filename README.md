@@ -14,14 +14,19 @@ If you've installed using the above method, you can update the module by running
 # Included cmdlets
 
 **Run `get-help <cmdlet>` for more documentation about a specific cmdlet**. All cmdlets also provide examples with `get-help <cmdlet> -examples`.
+
+### Test-Speed
+Runs a series of internet speed tests with specified interval/start/stop times, using speedtest.net's command-line utility `speedtest.exe`.
+
+### Get-IPInfo
+Returns info for given IP address, including registration and ASN info.
+
 ### New-Array
 A cute little helper cmdlet that takes the pain out of generating new arrays on the fly.
 
 ### Write-VMRDPConnection
 Generates RDP connections and a spreadsheet for all Windows VMs in specific (or all) resource pools. Useful for making Windows Server updates easier.
 
-### Get-IPInfo
-Returns info for given IP address, including registration and ASN info.
 
 ### Remove-BarracudaEmail
 Takes a CSV of delivered emails from Barracuda and removes them from Exchange mailboxes. Works both on-prem and on O365, but has to be run separately in each premise.
@@ -47,6 +52,6 @@ Initiates an Azure AD sync on the target server (target server must be running t
 Start-ADSync -ComputerName ad-connect
 ```
 
+
 ## Coming Soon
-### Test-Speed
-Runs a series of internet speed tests at the provided interval/start/stop times, using speedtest.net's command-line utility.
+...?
