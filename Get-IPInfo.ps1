@@ -13,21 +13,30 @@ function Get-IPInfo {
 
     Can accept multiple IP addresses in an array as pipeline input. See examples.
 
+    If you pass in an AbuseIPDB API key using the -APIKey parameter, it will also return reported abuse information. A free API key can be obtained by visiting abuseipdb.com.
+
     .Example
     Import-Csv .\IOCs.csv | ? {$_.type -eq "ip-dst"} | select -expand value | get-ipinfo | ft
 
     Get list of IPs from CSV.
+
+    .Example
+    Get-IPInfo 192.197.60.2 -APIKey bc14402430203d51df58e83daf642871efc2b0a3221f73c96da249d2b68e35ae1d6633249daa5421
+
+    Returns abuse info from abuseipdb.com. Go to abuseipdb.com to register for a free API key (up to 1000 checks/day).
 #>
     param (
     [Parameter(Mandatory,ValueFromPipeline=$true)]
 # Specify the IP address(s)
-        [array]$IPAddress
+        [array]$IPAddress,
+        [string]$APIKey
         )
 
     BEGIN {}
 
     PROCESS {
       $IPAddress | ForEach-Object {
+
     # Get the network info from ARIN
     $net = [xml]$(Invoke-WebRequest http://whois.arin.net/rest/ip/$_) | Select-Object -expand Net
     # Get the organization associated with the network from ARIN
@@ -70,6 +79,18 @@ function Get-IPInfo {
         WHOIS = "https://search.arin.net/rdap/?query=$_"
 
     }
+
+  If ($APIKey) {
+  $abuseDB = Invoke-WebRequest -Headers @{accept="application/json";key=$APIKey} -Uri https://api.abuseipdb.com/api/v2/check?ipAddress=$_ | ConvertFrom-Json | select -expand data
+
+  $object | Add-Member -NotePropertyName AbuseDBUsageType -NotePropertyValue $abuseDB.usageType -PassThru |
+    Add-Member -NotePropertyName AbuseDBConfidenceScore -NotePropertyValue $abuseDB.abuseConfidenceScore -PassThru |
+    Add-Member -NotePropertyName AbuseDBDomain -NotePropertyValue $abuseDB.domain -PassThru |
+    Add-Member -NotePropertyName AbuseDBHostnames -NotePropertyValue $abuseDB.hostnames -PassThru |
+    Add-Member -NotePropertyName AbuseDBTotalReports -NotePropertyValue $abuseDB.totalReports -PassThru |
+    Add-Member -NotePropertyName AbuseDBLastReported -NotePropertyValue $abuseDB.lastReportedAt 
+
+  }
 
 # Return the object.
   $object
