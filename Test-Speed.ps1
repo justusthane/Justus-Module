@@ -32,6 +32,13 @@ function Test-Speed {
     .Example
     Test-Speed -Interval 10 -StartTime "2021/08/19 3:00am" -EndTime "2021/08/19 7:00am"
     
+    Run a speed test every 10 minutes between 3am and 7am on August 19th (required if, e.g., you want to run it after midnight tonight).
+
+    .Example
+    Test-Speed | Select *
+
+    Return all properties instead of just the default set.
+    
     .Example
     Test-Speed -Repetitions 5 -ServerID 10300
 
@@ -70,22 +77,6 @@ function Test-Speed {
   $StartTime = Get-Date $StartTime
   If ($EndTime) {$EndTime = Get-Date $EndTime}
 
-  # Arguments to pass to speedtest.exe
-  $arguments = @("--format=csv","--output-header")
-
-  # Properties to select from speedtest.exe results
-  $properties = @(
-    @{l="Time";e={$time}},
-    @{l="ServerName";e={$_."server name"}},
-    @{l="ServerID";e={$_."server id"}},
-    @{l="Latency";e={$_."latency"}},
-    @{l="Jitter";e={$_."jitter"}},
-    @{l="PacketLoss";e={$_."packet loss"}},
-    @{l="Download(Mb)";e={$_."download bytes"/1024/1024}},
-    @{l="Upload(Mb)";e={$_."upload bytes"/1024/1024}},
-    @{l="ShareURL";e={$_."share url"}}
-  )
-
   # If it ain't time to start yet sleep a while
   while ($(Get-Date) -lt $StartTime) {
     Start-Sleep -seconds 10
@@ -103,17 +94,32 @@ function Test-Speed {
     # Get the current time
     $time = Get-Date
 
+    # Arguments to pass to speedtest.exe
+    $arguments = @("--format=csv","--output-header")
+
     # If the -ServerID parameter has been specified, then add "--server-id" to the list of parameters to 
     # pass to speedtest.exe. Otherwise it will automatically choose a server.
     If ($ServerID) {
       $arguments += "--server-id=$ServerID"
     }
 
-    # Call speedtest.exe with the specifified arguments and convert the output from CSV to a PowerShell object, then
-    # customize the resulting properties, then
-    # Tee the results (print them to screen and also save them to $results variable so we can get the server ID later.
-    . $SpeedtestExe $arguments | ConvertFrom-Csv | Select-Object -Property $properties | Tee-Object -Variable results
-    
+    # Call speedtest.exe at the specified path with the specified objects, convert the CSV results to an object, and save to $results
+    $results = . $SpeedtestExe $arguments | ConvertFrom-Csv
+
+    # Return the results as a custom object
+    [PSCustomObject]@{
+      PSTypeName = "Justus-Module.Test-Speed.Results" #This sets the TypeName of the object. There's a corresponding display format in "Justus-Module.Format.ps1xml" which outputs the results in a table by default.
+      Time = $time
+      ServerName = $results."server name"
+      ServerID = $results."server id"
+      Latency = $results."latency"
+      Jitter = $results."jitter"
+      PacketLoss = $results."packet loss"
+      "Download(Mb)" = [math]::Round($results."download bytes"/1024/1024,2) #Convert bits to megabits and round to two decimals
+      "Upload(Mb)" = [math]::Round($results."upload bytes"/1024/1024,2) #Convert bits to megabits and round to two decimals
+      ShareURL = $results."share url"
+    }
+
     # If -ServerID parameter has not been specified, then set $ServerID to the server automatically selected in the first loop so that
     # the script uses the same server for each repetition.
     If (-Not($ServerID)) {
