@@ -29,10 +29,17 @@ function Get-IPInfo {
     [Parameter(Mandatory,ValueFromPipeline=$true)]
 # Specify the IP address(s)
         [array]$IPAddress,
-        [string]$APIKey
+        # Specify optional abuseipdb.com API key to return abuse info
+        [string]$APIKey,
+        # Indicate that abuseipdb.com API key should be read from $Env:AbuseIPDBAPIKey environment variable. More convenient than providing it via the -APIKey parameter each time
+        [switch]$EnvAPIKey
         )
 
-    BEGIN {}
+    BEGIN {
+        If ($EnvAPIKey) {
+          $APIKey = $Env:AbuseIPDBAPIKey
+        }
+      }
 
     PROCESS {
       $IPAddress | ForEach-Object {
