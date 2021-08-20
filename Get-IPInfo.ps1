@@ -7,37 +7,48 @@ function Get-IPInfo {
     Gets info about the provided IP address.
 
     .Description
-    This cmdlet queries various sources (currently ARIN and cymru.com) for information about a given IP, including WHOIS and ASN info.
-
-    This cmdlet is brittle as it relies on parsing HTML, and may break if the websites it scrapes change their format. If so, please submit an issue on the repo (https://github.com/justusthane/Justus-Module) and I'll fix it (or fix it yourself and submit a PR)
+    This cmdlet queries various sources (currently ARIN and asn.cymru.com, and optionally abuseipdb.com) for information about a given IP, including WHOIS and ASN info.
 
     Can accept multiple IP addresses in an array as pipeline input. See examples.
 
-    If you pass in an AbuseIPDB API key using the -APIKey parameter, it will also return reported abuse information. A free API key can be obtained by visiting abuseipdb.com.
+    If you pass in an AbuseIPDB API key using the -APIKeyAbuseIP parameter, it will also return reported abuse information. A free API key can be obtained by visiting abuseipdb.com.
+
+    If called without an -IPAddress, it will return info about your own public address.
+
+    This cmdlet is brittle as it relies on parsing HTML, and may break if the websites it scrapes change their format. If so, please submit an issue on the repo (https://github.com/justusthane/Justus-Module) and I'll fix it (or fix it yourself and submit a PR)
+
+    .Example
+    Get-IPInfo
+
+    Return info about your own public IP.
+
+    .Example
+    Get-IPInfo 192.197.60.2 -APIKeyAbuseIP bc14402430203d51df58e83daf642871efc2b0a3221f73c96da249d2b68e35ae1d6633249daa5421
+
+    Returns abuse info from abuseipdb.com. Go to abuseipdb.com to register for a free API key (up to 1000 checks/day).
 
     .Example
     Import-Csv .\IOCs.csv | ? {$_.type -eq "ip-dst"} | select -expand value | get-ipinfo | ft
 
     Get list of IPs from CSV.
 
-    .Example
-    Get-IPInfo 192.197.60.2 -APIKey bc14402430203d51df58e83daf642871efc2b0a3221f73c96da249d2b68e35ae1d6633249daa5421
-
-    Returns abuse info from abuseipdb.com. Go to abuseipdb.com to register for a free API key (up to 1000 checks/day).
 #>
     param (
-    [Parameter(Mandatory,ValueFromPipeline=$true)]
+    [Parameter(ValueFromPipeline=$true)]
 # Specify the IP address(s)
         [array]$IPAddress,
         # Specify optional abuseipdb.com API key to return abuse info
-        [string]$APIKey,
-        # Indicate that abuseipdb.com API key should be read from $Env:AbuseIPDBAPIKey environment variable. More convenient than providing it via the -APIKey parameter each time
-        [switch]$EnvAPIKey
+        [string]$APIKeyAbuseIP,
+        # Indicate that abuseipdb.com API key should be read from $Env:APIKeyAbuseIP environment variable. More convenient than providing it via the -APIKey parameter each time
+        [switch]$EnvAPIKeyAbuseIP
         )
 
     BEGIN {
-        If ($EnvAPIKey) {
-          $APIKey = $Env:AbuseIPDBAPIKey
+        If (-Not($IPAddress)) {
+          $IPAddress = $(Invoke-WebRequest http://icanhazip.com/).Content.Trim()
+        }
+        If ($EnvAPIKeyAbuseIP) {
+          $APIKeyAbuseIP = $Env:APIKeyAbuseIP
         }
       }
 
@@ -87,8 +98,8 @@ function Get-IPInfo {
 
     }
 
-  If ($APIKey) {
-  $abuseDB = Invoke-WebRequest -Headers @{accept="application/json";key=$APIKey} -Uri https://api.abuseipdb.com/api/v2/check?ipAddress=$_ | ConvertFrom-Json | select -expand data
+  If ($APIKeyAbuseIP) {
+  $abuseDB = Invoke-WebRequest -Headers @{accept="application/json";key=$APIKeyAbuseIP} -Uri https://api.abuseipdb.com/api/v2/check?ipAddress=$_ | ConvertFrom-Json | select -expand data
 
   $object | Add-Member -NotePropertyName AbuseDBUsageType -NotePropertyValue $abuseDB.usageType -PassThru |
     Add-Member -NotePropertyName AbuseDBConfidenceScore -NotePropertyValue $abuseDB.abuseConfidenceScore -PassThru |
