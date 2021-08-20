@@ -40,7 +40,9 @@ function Get-IPInfo {
         # Specify optional abuseipdb.com API key to return abuse info
         [string]$APIKeyAbuseIP,
         # Indicate that abuseipdb.com API key should be read from $Env:APIKeyAbuseIP environment variable. More convenient than providing it via the -APIKey parameter each time
-        [switch]$EnvAPIKeyAbuseIP
+        [switch]$EnvAPIKeyAbuseIP,
+        # If fetching abuse info, specify the maximum report age to include (default 60 days)
+        [int]$maxReportAge = 60
         )
 
     BEGIN {
@@ -104,20 +106,25 @@ function Get-IPInfo {
 
       # If an API key for AbuseIPDB is specified, fetch abuse info
       If ($APIKeyAbuseIP) {
-        $abuseDB = Invoke-WebRequest -Headers @{accept="application/json";key=$APIKeyAbuseIP} -Uri https://api.abuseipdb.com/api/v2/check?ipAddress=$_ | ConvertFrom-Json | select -expand data
+        $abuseDB = Invoke-WebRequest -Headers @{accept="application/json";key=$APIKeyAbuseIP} -Uri https://api.abuseipdb.com/api/v2/check?ipAddress=$_"&"verbose"&"maxAgeInDays=$maxReportAge |
+          ConvertFrom-Json | select-object -expand data
 
         # And add the abuse info to the output $object
-        $object | Add-Member -NotePropertyName AbuseDBUsageType -NotePropertyValue $abuseDB.usageType -PassThru |
-        Add-Member -NotePropertyName AbuseDBConfidenceScore -NotePropertyValue $abuseDB.abuseConfidenceScore -PassThru |
-        Add-Member -NotePropertyName AbuseDBDomain -NotePropertyValue $abuseDB.domain -PassThru |
-        Add-Member -NotePropertyName AbuseDBHostnames -NotePropertyValue $abuseDB.hostnames -PassThru |
-        Add-Member -NotePropertyName AbuseDBTotalReports -NotePropertyValue $abuseDB.totalReports -PassThru |
-        Add-Member -NotePropertyName AbuseDBLastReported -NotePropertyValue $abuseDB.lastReportedAt 
+        $object | Add-Member -NotePropertyMembers @{
+          AbuseDBUsageType = $abuseDB.usageType
+          AbuseDBConfidenceScore = $abuseDB.abuseConfidenceScore
+          AbuseDBDomain = $abuseDB.domain
+          AbuseDBHostnames = $abuseDB.hostnames
+          AbuseDBTotalReports = $abuseDB.totalReports
+          AbuseDBLastReported = $abuseDB.lastReportedAt
+          AbuseDBReports = $abuseDB.reports
+        }
 
       }
 
       # Return the object.
       $object
+
     }
   }
 
