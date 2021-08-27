@@ -98,7 +98,7 @@ function New-Password {
   [CmdletBinding(SupportsShouldProcess)]
   param(
     # The password length
-    [int]$Length = 12,
+    [int]$Length = 14,
     # The minimum number of special characters
     [int]$SpecialCharacters = 2,
     # Specify the number of passwords to generate (default 1)
