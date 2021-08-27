@@ -80,3 +80,28 @@ function New-Array {
 
 
 
+function New-Password {
+  <#
+    .SYNOPSIS
+    Generate random passwords
+
+    .DESCRIPTION
+
+    Inspired by https://adamtheautomator.com/random-password-generator/
+  #>
+  [CmdletBinding(SupportsShouldProcess)]
+  param(
+    # The password length
+    [int]$Length = 12,
+    # The minimum number of special characters
+    [int]$SpecialCharacters = 2
+  )
+
+  # This is just here to make PSScriptAnalyzer happy. It complains about cmdlets that use the New- verb otherwise
+  If ($PSCmdlet.ShouldProcess("New password")) {
+    Add-Type -AssemblyName 'System.Web'
+    $password = [System.Web.Security.Membership]::GeneratePassword($Length,$SpecialCharacters)
+
+    $password
+  }
+}
