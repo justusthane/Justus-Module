@@ -87,6 +87,12 @@ function New-Password {
 
     .DESCRIPTION
 
+    Generates random password(s) of the specified length. Change the length with the -Length paramater (default 12 chars).
+
+    By default returns a single password, use the -NumberOfPasswords parameter to generate a list.
+
+    By default it will avoid amibuous characters ("liI1O0"). This may incur a slight performance hit. To disable this behavior, use -AvoidAmbiguousCharacters $False
+
     Inspired by https://adamtheautomator.com/random-password-generator/
   #>
   [CmdletBinding(SupportsShouldProcess)]
@@ -94,14 +100,22 @@ function New-Password {
     # The password length
     [int]$Length = 12,
     # The minimum number of special characters
-    [int]$SpecialCharacters = 2
+    [int]$SpecialCharacters = 2,
+    # Specify the number of passwords to generate (default 1)
+    [int]$NumberOfPasswords = 1,
+    # Set to $False to not avoid ambiguous characters ("liI1O0")
+    [boolean]$AvoidAmbiguousCharacters = $True
   )
 
   # This is just here to make PSScriptAnalyzer happy. It complains about cmdlets that use the New- verb otherwise
   If ($PSCmdlet.ShouldProcess("New password")) {
     Add-Type -AssemblyName 'System.Web'
-    $password = [System.Web.Security.Membership]::GeneratePassword($Length,$SpecialCharacters)
+    For ($i = 0; $i -lt $NumberOfPasswords; $i++) {
+      do {
+        $password = [System.Web.Security.Membership]::GeneratePassword($Length,$SpecialCharacters)
+      } while ($AvoidAmbiguousCharacters -And $password -Cmatch "[liI1O0]")
 
-    $password
+      $password
+    }
   }
 }
