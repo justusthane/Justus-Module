@@ -101,10 +101,9 @@ function Remove-BarracudaEmail {
     }
   }
   If (-Not ($WhatIfPreference)) {
-    Write-Information -InformationAction Continue "The messages should have been deleted."
+    Write-Information -InformationAction Continue "The messages should have been deleted.`n"
   }
   If ($offPrem) {
-    Write-Information -InformationAction Continue "Some mailboxes could not be searched due to being in the other premises."
     Write-Information -InformationAction Continue "The following mailboxes are located in the other premises and could not be searched. Please run this cmdlet again in the other premises to delete those messages:`n"
     Write-Information -InformationAction Continue "E.g. If you're running this on Office365, please run again on-prem, or vice versa.`n"
 
