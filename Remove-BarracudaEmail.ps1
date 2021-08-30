@@ -80,6 +80,7 @@ function Remove-BarracudaEmail {
 
   $onPrem | ForEach-Object {
     If ($Force -Or $WhatIfPreference -Or $PSCmdlet.ShouldContinue($_.To,"Delete messages",[ref]$yesToAll,[ref]$noToAll)) {
+    
     $Arguments = @{
       Identity = $_.To
       SearchQuery = "Received:$(Get-Date -Date $_.Time -Format 'yyyy-MM-dd') and From:$($_.From) and Subject:$($_.Subject)"
@@ -96,7 +97,7 @@ function Remove-BarracudaEmail {
     Else {
       $Arguments.DeleteContent = $True
     }
-    Search-Mailbox @Arguments
+    Search-Mailbox @Arguments | Select-Object Identity,Success,ResultItemsCount,ResultItemsSize
     }
   }
   If (-Not ($WhatIfPreference)) {
