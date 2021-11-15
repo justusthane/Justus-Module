@@ -93,6 +93,8 @@ function New-Password {
 
     By default it will avoid amibuous characters ("liI1O0"). This may incur a slight performance hit. To disable this behavior, use -AvoidAmbiguousCharacters $False
 
+    By default displays passwords using Out-GridView so that they're not saved in terminal history. Use -GridView $False to output to terminal instead.
+
     Inspired by https://adamtheautomator.com/random-password-generator/
   #>
   [CmdletBinding(SupportsShouldProcess)]
@@ -104,18 +106,27 @@ function New-Password {
     # Specify the number of passwords to generate (default 1)
     [int]$NumberOfPasswords = 1,
     # Set to $False to not avoid ambiguous characters ("liI1O0")
-    [boolean]$AvoidAmbiguousCharacters = $True
+    [boolean]$AvoidAmbiguousCharacters = $True,
+    # Set to $False to output to terminal rather than gridview
+    [boolean]$GridView = $True
   )
 
   # This is just here to make PSScriptAnalyzer happy. It complains about cmdlets that use the New- verb otherwise
   If ($PSCmdlet.ShouldProcess("New password")) {
     Add-Type -AssemblyName 'System.Web'
+    $passwords = @()
     For ($i = 0; $i -lt $NumberOfPasswords; $i++) {
       do {
         $password = [System.Web.Security.Membership]::GeneratePassword($Length,$SpecialCharacters)
       } while ($AvoidAmbiguousCharacters -And $password -Cmatch "[liI1O0]")
 
-      $password
+      $passwords += $password
+    } 
+    If ($GridView) {
+      $passwords | Out-GridView
+    }
+    Else {
+      $passwords
     }
   }
 }
