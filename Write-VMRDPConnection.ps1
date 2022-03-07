@@ -149,7 +149,7 @@ function Write-VMRDPConnection {
       #Get all VMs in the current resource pool
       $_ | get-vm | ForEach-Object {
         If (($_.PowerState -eq "PoweredOn") -And ($_.GuestID -like "*Windows*")) {
-          $vmInfo += $_ | Select-Object Name,"Downloading","Installing","Pending Reboot","Done","Notes","ERROR"
+          $vmInfo += $_ | Select-Object Name,"Checking","Up-to-Date","Downloading","Installing","Pending Reboot","Rebooted","Done","Notes","ERROR"
           $rdpParameters + "full address:s:$($_.Name)" | Out-File "$($directory.FullName)\$($_.Name).rdp"
         }
       }
