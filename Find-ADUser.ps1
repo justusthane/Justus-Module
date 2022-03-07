@@ -15,7 +15,7 @@ function Find-ADUser {
   .Example
   Find-ADUser jbad
 
-  Search for a user by part of their name (note that wildcards are added automatically and are not necessary).
+  Search for a user by part of their name (* wildcards can be included).
 
   .Example
   Find-ADUser jbadergr,swoobec
@@ -33,7 +33,7 @@ function Find-ADUser {
   Specify additional properties to return. Can specify * for all.
 
   .Example
-  Find-ADUser shurget@confederation
+  Find-ADUser shurget@confederation*
 
   DisplayName              Name     SAMAccountName
   -----------              ----     --------------
@@ -49,26 +49,49 @@ function Find-ADUser {
     # Specify the search string, or array of search strings.
     [array]$SearchString,
     # Specify which properties to return, or * for all
-    #
-    [array]$Properties = @()
+    [array]$Properties = @(),
+    # If this switch is specified, the cmdlet will verify that the user's AD ObjectGUID matches their Azure ImmutableID. Must have the MSOnline module and run "Connect-MsolService" prior to running this cmdlet.
+    [switch]$VerifyAzureID
   )
 
   BEGIN {
-  $AdditionalProperties = ("DisplayName","SAMAccountName","Description","PasswordLastSet","PasswordExpired","Enabled","LockedOut") + $Properties
+    function verifyAzureUser {
+      param (
+        [string]$upn,
+        [string]$objectGuid
+      )
+      try {
+        If ($(Get-MsolUser -UserPrincipalName $upn | select -expand ImmutableId) -eq $([system.convert]::ToBase64String(([GUID]$objectGuid).ToByteArray()))) {
+          $True
+        } else {
+          $False
+        }
+      }
+      Catch {
+        "Error - connected to MSOL?"
+      }
+    }
+    $AdditionalProperties = ("DisplayName","SAMAccountName","UserPrincipalName","Description","PasswordLastSet","PasswordExpired","Enabled","LockedOut","ObjectGUID") + $Properties
 
-  $searchAttributes = "DisplayName -like '*$searchString*' `
-    -or Name -like '*$searchString*' `
-    -or proxyAddresses -like '*$SearchString*'"
+    $searchAttributes = "DisplayName -like '$searchString' `
+      -or SAMAccountName -like '$searchString' `
+      -or Name -like '$searchString' `
+      -or proxyAddresses -like '$SearchString'"
   }
 
 
   PROCESS {
     $SearchString | ForEach-Object {
-    $searchAttributes = "DisplayName -like '*$_*' `
-      -or Name -like '*$_*' `
-      -or proxyAddresses -like '*$_*'";
-    Get-ADUser -filter $searchAttributes -Properties $($AdditionalProperties + "msExchRecipientDisplayType") |
-    Select-Object -Property $($AdditionalProperties + @{l='MailboxLocation';e={If ($_.msExchRecipientDisplayType -eq "1073741824"){"On-prem"} ElseIf ($_.msExchRecipientDisplayType -eq "-2147483642"){"O365"}}})
+      $searchAttributes = "DisplayName -like '$_' `
+        -or Name -like '$_' `
+        -or proxyAddresses -like '*$_*'";
+      $results = Get-ADUser -filter $searchAttributes -Properties $($AdditionalProperties + "msExchRecipientDisplayType") |
+      Select-Object -Property $($AdditionalProperties + @{l='MailboxLocation';e={If ($_.msExchRecipientDisplayType -eq "1073741824"){"On-prem"} ElseIf ($_.msExchRecipientDisplayType -eq "-2147483642"){"O365"}}})
+
+      If ($VerifyAzureID) {
+        $results = $results | Select -Property *,@{l='AzureIdentityMatches';e={verifyAzureUser -upn $_.UserPrincipalName -objectGuid $_.ObjectGUID}} -ExcludeProperty ObjectGUID
+      }
+      $results 
     }
   }
 
