@@ -108,21 +108,31 @@ function New-Password {
     # Set to $False to not avoid ambiguous characters ("liI1O0")
     [boolean]$AvoidAmbiguousCharacters = $True,
     # Set to $False to output to terminal rather than gridview
-    [boolean]$GridView = $True
+    [boolean]$GridView = $True,
+    # Set to $True to output to VisiData. This is the recommended option if you have VisiData installed. See 'Get-Help Out-VisiData'
+    # If you set the $Env:VisiData environment variable to $True, it will output to VisiData by default, but can be overwritten by setting
+    # this parameter to $False
+    $VisiData = $Env:VisiData
   )
 
   # This is just here to make PSScriptAnalyzer happy. It complains about cmdlets that use the New- verb otherwise
   If ($PSCmdlet.ShouldProcess("New password")) {
+    $VisiData
     Add-Type -AssemblyName 'System.Web'
     $passwords = @()
     For ($i = 0; $i -lt $NumberOfPasswords; $i++) {
       do {
-        $password = [System.Web.Security.Membership]::GeneratePassword($Length,$SpecialCharacters)
+        $password = [PSCustomObject]@{
+          Password = [System.Web.Security.Membership]::GeneratePassword($Length,$SpecialCharacters)
+        }
       } while ($AvoidAmbiguousCharacters -And $password -Cmatch "[liI1O0]")
 
       $passwords += $password
     } 
-    If ($GridView) {
+    If ($VisiData) {
+      $passwords | Out-VisiData
+    }
+    ElseIf ($GridView) {
       $passwords | Out-GridView
     }
     Else {
