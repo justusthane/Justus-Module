@@ -33,13 +33,13 @@ function Find-ADUser {
   Specify additional properties to return. Can specify * for all.
 
   .Example
-  Find-ADUser shurget@confederation*
+  Find-ADUser *shurget@confederation*
 
   DisplayName              Name     SAMAccountName
   -----------              ----     --------------
   jbadergr (Justus Grunow) jbadergr jbadergr
 
-  Because the command also searches proxyAddresses, it can be used to find out what user a specific email address is attached to.
+  Because the command also searches proxyAddresses, it can be used to find out what user a specific email address is attached to. Wildcards must be included on both sides of the search string to search ProxyAddresses.
 
 
 #>
@@ -72,19 +72,15 @@ function Find-ADUser {
       }
     }
     $AdditionalProperties = ("DisplayName","SAMAccountName","UserPrincipalName","Description","PasswordLastSet","PasswordExpired","Enabled","LockedOut","ObjectGUID") + $Properties
-
-    $searchAttributes = "DisplayName -like '$searchString' `
-      -or SAMAccountName -like '$searchString' `
-      -or Name -like '$searchString' `
-      -or proxyAddresses -like '$SearchString'"
   }
 
 
   PROCESS {
     $SearchString | ForEach-Object {
       $searchAttributes = "DisplayName -like '$_' `
+        -or SAMAccountName -like '$_' `
         -or Name -like '$_' `
-        -or proxyAddresses -like '*$_*'";
+        -or proxyAddresses -like '$_'";
       $results = Get-ADUser -filter $searchAttributes -Properties $($AdditionalProperties + "msExchRecipientDisplayType") |
       Select-Object -Property $($AdditionalProperties + @{l='MailboxLocation';e={If ($_.msExchRecipientDisplayType -eq "1073741824"){"On-prem"} ElseIf ($_.msExchRecipientDisplayType -eq "-2147483642"){"O365"}}})
 
