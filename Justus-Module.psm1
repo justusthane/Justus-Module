@@ -117,7 +117,6 @@ function New-Password {
 
   # This is just here to make PSScriptAnalyzer happy. It complains about cmdlets that use the New- verb otherwise
   If ($PSCmdlet.ShouldProcess("New password")) {
-    $VisiData
     Add-Type -AssemblyName 'System.Web'
     $passwords = @()
     For ($i = 0; $i -lt $NumberOfPasswords; $i++) {
