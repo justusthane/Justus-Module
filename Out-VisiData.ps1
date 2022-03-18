@@ -4,9 +4,7 @@ function Out-VisiData {
   <#
     .Synopsis
 
-    A simple cmdlet that allows output of other cmdlets (e.g. Get-Process) to be piped into the excellent VisiData a Excel-like TUI experience for analyzing data on the command line on Windows machines.
-    
-    On *nix, piping is supported by VisiData natively.
+    A simple cmdlet that allows output of other cmdlets (e.g. Get-Process) to be piped into the excellent VisiData a Excel-like TUI experience for analyzing data on the command line on Windows machines. (On *nix, piping is supported by VisiData natively.)
 
     This makes an excellent (and much better) alternative to PowerShell's Out-GridView cmdlet.
 
@@ -25,7 +23,8 @@ function Out-VisiData {
     param (
         [Parameter(ValueFromPipeline=$true,Mandatory=$True)]
         # Specify the IP address(s)
-        $Input
+        $Input,
+        [string]$FileType = "csv"
         )
 
     BEGIN {
@@ -37,7 +36,7 @@ function Out-VisiData {
   }
 
   END {
-      VisiData.exe $tempFile.FullName -f csv
+      VisiData.exe $tempFile.FullName -f $FileType
       Remove-Item -Path $tempFile.FullName -Force
     }
 }
