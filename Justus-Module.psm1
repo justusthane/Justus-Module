@@ -139,3 +139,43 @@ function New-Password {
     }
   }
 }
+
+function Select-Unique {
+  <#
+    .SYNOPSIS
+    Select unique propertie(s) from object
+
+    .DESCRIPTION
+    Given an input object, returns only unique combinations of the specified properties.
+
+    .EXAMPLE
+    Get-Process | Select-Unique ProcessName
+
+    Get list of each unique running process.
+
+  #>
+  param (
+      [Parameter(ValueFromPipeline=$true,Mandatory=$True)]
+      # Input object to filter
+      [PSCustomObject]$Input,
+      [Parameter(Position=0)]
+      # Unique property(s) to select. If none are specified, all unique rows will be returned.
+      [array]$Properties
+    )
+
+  BEGIN {
+    }
+
+  PROCESS {
+      # There's probably a better way to do this, but I don't know it. I need to process the entire input object at once, rather than one row at a time,
+      # so I'm building a new array using the input, and then processing it in the END block. Feels hacky and inefficient.
+      $object += $Input
+    }
+
+  END {
+      If (-Not($Properties)) {
+        $Properties = $object | Get-Member | Where-Object {$_.MemberType -eq "NoteProperty"} | Select-Object -Expand Name
+      }
+      $object | Group-Object -Property $Properties | %{$_.Group | Select -Property $Properties -first 1 }
+    }
+}

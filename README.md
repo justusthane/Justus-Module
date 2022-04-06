@@ -24,9 +24,11 @@ Returns info for given IP address, including registration and ASN info.
 ### New-Array
 A cute little helper cmdlet that takes the pain out of generating new arrays on the fly.
 
+### Select-Unique
+Given an input object, returns only unique combinations of the specified properties.
+
 ### Write-VMRDPConnection
 Generates RDP connections and a spreadsheet for all Windows VMs in specific (or all) resource pools. Useful for making Windows Server updates easier.
-
 
 ### Remove-BarracudaEmail
 Takes a CSV of delivered emails from Barracuda and removes them from Exchange mailboxes. Works both on-prem and on O365, but has to be run separately in each premise.
@@ -45,15 +47,14 @@ Returns the status of all mailboxes in a given migration batch, including whethe
 ### Get-SkippedItem
 Returns all skipped items for all mailboxes in a given migration batch.
 
-### Start-ADSync
-Initiates an Azure AD sync on the target server (target server must be running the AD Sync application).
+### Start-ADSync Initiates an Azure AD sync on the target server (target server
+must be running the AD Sync application).
 
-```powershell
-Start-ADSync -ComputerName ad-connect
-```
+```powershell Start-ADSync -ComputerName ad-connect ```
 
-### Out-VisiData
-Allows cmdlet output to be piped to VisiData on Windows (requires [VisiData](https://www.visidata.org) to be installed---see **Get-Help Out-VisiData** for more info).
+### Out-VisiData Allows cmdlet output to be piped to VisiData on Windows
+(requires [VisiData](https://www.visidata.org) to be installed---see **Get-Help
+Out-VisiData** for more info).
 
 
 ## Coming Soon
