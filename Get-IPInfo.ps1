@@ -46,6 +46,9 @@ function Get-IPInfo {
         )
 
     BEGIN {
+      # Initialize a lookup cache to store the results of each lookup. This way if the same IP address is looked up multiple times, it will return the previous result from the cache.
+      $lookupCache = @{}
+
       # If -IPAddress isn't specified, fetch current public IP from icanhazip.com and use that instead.
       # I'm using icanhazip.com because despite the...dated...name, it's been taken over by Cloudflare
       # so I have confidence it will be around for a while.
@@ -61,69 +64,76 @@ function Get-IPInfo {
   PROCESS {
     $IPAddress | ForEach-Object {
 
-      # Get the network info from ARIN
-      $net = [xml]$(Invoke-WebRequest http://whois.arin.net/rest/ip/$_) | Select-Object -expand Net
-      # Get the organization associated with the network from ARIN
-      # Some networks have "Customers" rather than "Organizations". This checks which exists and fetches the appropriate one.
-      If ($net.orgRef."#text") {
-        $org = [xml]$(Invoke-WebRequest $($net.orgRef."#text")) | Select-Object -expand Org
-      } ElseIf ($net.customerRef."#text") {
-        $org = [xml]$(Invoke-WebRequest $($net.customerRef."#text")) | Select-Object -expand customer
-      }
+      If ($lookupCache[$_]) {
+        $lookupCache[$_]
+      } Else {
+
+        # Get the network info from ARIN
+        $net = [xml]$(Invoke-WebRequest http://whois.arin.net/rest/ip/$_) | Select-Object -expand Net
+        # Get the organization associated with the network from ARIN
+        # Some networks have "Customers" rather than "Organizations". This checks which exists and fetches the appropriate one.
+        If ($net.orgRef."#text") {
+          $org = [xml]$(Invoke-WebRequest $($net.orgRef."#text")) | Select-Object -expand Org
+        } ElseIf ($net.customerRef."#text") {
+          $org = [xml]$(Invoke-WebRequest $($net.customerRef."#text")) | Select-Object -expand customer
+        }
 
 
-      # Get associated ASN info from cymru.com.
-      # whois.cymru.com doesn't supply an API we can use, so we'll scrape the HTML instead.
-      # Fetch the website, and save session info (cookies, etc) to $webSession variable
-      $response = Invoke-WebRequest https://whois.cymru.com/ -SessionVariable $webSession
-      # Get the HTML form from the response
-      $form = $response.Forms[0]
-      # Fill out the form with the necessary info
-      $form.Fields.bulk_paste = $_
-      $form.Fields.method_whois = "on"
-      $form.Fields.method_peer = ""
-      # Submit the form and get our response!
-      $response = Invoke-WebRequest -Uri https://whois.cymru.com/cgi-bin/whois.cgi -WebSession $webSession -Method POST -Body $form.Fields
-      # Parse the returned HTML for the info we're looking for. Matches are automatically saved to the $Matches variable which we use later.
-      # Output is piped to Out-Null, otherwise it returns the string "True" to indicate that a match was found.
-      $response.Content -match '(\d+?)\s+?\|\s(.+?)\s+\|\s(.+?)\s+\|\s(.+?)\s+\|\s(.+?)\s+\|\s(.+?)\s+\|\s(.+)' | Out-Null
+        # Get associated ASN info from cymru.com.
+        # whois.cymru.com doesn't supply an API we can use, so we'll scrape the HTML instead.
+        # Fetch the website, and save session info (cookies, etc) to $webSession variable
+        $response = Invoke-WebRequest https://whois.cymru.com/ -SessionVariable $webSession
+        # Get the HTML form from the response
+        $form = $response.Forms[0]
+        # Fill out the form with the necessary info
+        $form.Fields.bulk_paste = $_
+        $form.Fields.method_whois = "on"
+        $form.Fields.method_peer = ""
+        # Submit the form and get our response!
+        $response = Invoke-WebRequest -Uri https://whois.cymru.com/cgi-bin/whois.cgi -WebSession $webSession -Method POST -Body $form.Fields
+        # Parse the returned HTML for the info we're looking for. Matches are automatically saved to the $Matches variable which we use later.
+        # Output is piped to Out-Null, otherwise it returns the string "True" to indicate that a match was found.
+        $response.Content -match '(\d+?)\s+?\|\s(.+?)\s+\|\s(.+?)\s+\|\s(.+?)\s+\|\s(.+?)\s+\|\s(.+?)\s+\|\s(.+)' | Out-Null
 
-      # Build a custom object with our collected info
-      $object = [PSCustomObject]@{
-          IPAddress = $_
-          Network = "$($net.netBlocks.netBlock.startAddress)/$($net.netBlocks.netBlock.cidrLength)"
-          Organization = $org.name
-          City = $org.city
-          Region = $org.'iso3166-2'
-          Country = $org.'iso3166-1'.name
-          ASN = $Matches[1]
-          ASNOrg = $Matches[7]
-          ASNRegistry = $Matches[5]
-          ASNRoute = $Matches[3]
-          WHOIS = "https://search.arin.net/rdap/?query=$_"
+        # Build a custom object with our collected info
+        $object = [PSCustomObject]@{
+            IPAddress = $_
+            Network = "$($net.netBlocks.netBlock.startAddress)/$($net.netBlocks.netBlock.cidrLength)"
+            Organization = $org.name
+            City = $org.city
+            Region = $org.'iso3166-2'
+            Country = $org.'iso3166-1'.name
+            ASN = $Matches[1]
+            ASNOrg = $Matches[7]
+            ASNRegistry = $Matches[5]
+            ASNRoute = $Matches[3]
+            WHOIS = "https://search.arin.net/rdap/?query=$_"
+
+          }
+
+        # If an API key for AbuseIPDB is specified, fetch abuse info
+        If ($APIKeyAbuseIP) {
+          $abuseDB = Invoke-WebRequest -Headers @{accept="application/json";key=$APIKeyAbuseIP} -Uri https://api.abuseipdb.com/api/v2/check?ipAddress=$_"&"verbose"&"maxAgeInDays=$maxReportAge |
+            ConvertFrom-Json | select-object -expand data
+
+          # And add the abuse info to the output $object
+          $object | Add-Member -NotePropertyMembers @{
+            AbuseDBUsageType = $abuseDB.usageType
+            AbuseDBConfidenceScore = $abuseDB.abuseConfidenceScore
+            AbuseDBDomain = $abuseDB.domain
+            AbuseDBHostnames = $abuseDB.hostnames
+            AbuseDBTotalReports = $abuseDB.totalReports
+            AbuseDBLastReported = $abuseDB.lastReportedAt
+            AbuseDBReports = $abuseDB.reports
+          }
 
         }
 
-      # If an API key for AbuseIPDB is specified, fetch abuse info
-      If ($APIKeyAbuseIP) {
-        $abuseDB = Invoke-WebRequest -Headers @{accept="application/json";key=$APIKeyAbuseIP} -Uri https://api.abuseipdb.com/api/v2/check?ipAddress=$_"&"verbose"&"maxAgeInDays=$maxReportAge |
-          ConvertFrom-Json | select-object -expand data
-
-        # And add the abuse info to the output $object
-        $object | Add-Member -NotePropertyMembers @{
-          AbuseDBUsageType = $abuseDB.usageType
-          AbuseDBConfidenceScore = $abuseDB.abuseConfidenceScore
-          AbuseDBDomain = $abuseDB.domain
-          AbuseDBHostnames = $abuseDB.hostnames
-          AbuseDBTotalReports = $abuseDB.totalReports
-          AbuseDBLastReported = $abuseDB.lastReportedAt
-          AbuseDBReports = $abuseDB.reports
-        }
+        # Return the object.
+        $lookupCache[$_] = $object
+        $object
 
       }
-
-      # Return the object.
-      $object
 
     }
   }
