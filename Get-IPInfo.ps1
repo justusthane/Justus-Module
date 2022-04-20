@@ -42,7 +42,9 @@ function Get-IPInfo {
         # Indicate that abuseipdb.com API key should be read from $Env:APIKeyAbuseIP environment variable. More convenient than providing it via the -APIKey parameter each time
         [switch]$EnvAPIKeyAbuseIP,
         # If fetching abuse info, specify the maximum report age to include (default 60 days)
-        [int]$maxReportAge = 60
+        [int]$maxReportAge = 60,
+        [string]$Property,
+        [switch]$PassThru
         )
 
     BEGIN {
@@ -59,17 +61,24 @@ function Get-IPInfo {
       If ($EnvAPIKeyAbuseIP) {
         $APIKeyAbuseIP = $Env:APIKeyAbuseIP
       }
+
     }
 
   PROCESS {
-    $IPAddress | ForEach-Object {
+    #$IPAddress | ForEach-Object {
 
-      If ($lookupCache[$_]) {
-        $lookupCache[$_]
+      If ($Property) {
+        $strIPAddress = $IPAddress.$($Property)
+      } Else {
+        $strIPAddress = $IPAddress[0]
+      }
+
+      If ($lookupCache[$strIPAddress]) {
+        $lookupCache[$strIPAddress]
       } Else {
 
         # Get the network info from ARIN
-        $net = [xml]$(Invoke-WebRequest http://whois.arin.net/rest/ip/$_) | Select-Object -expand Net
+        $net = [xml]$(Invoke-WebRequest http://whois.arin.net/rest/ip/$strIPAddress) | Select-Object -expand Net
         # Get the organization associated with the network from ARIN
         # Some networks have "Customers" rather than "Organizations". This checks which exists and fetches the appropriate one.
         If ($net.orgRef."#text") {
@@ -86,7 +95,7 @@ function Get-IPInfo {
         # Get the HTML form from the response
         $form = $response.Forms[0]
         # Fill out the form with the necessary info
-        $form.Fields.bulk_paste = $_
+        $form.Fields.bulk_paste = $strIPAddress
         $form.Fields.method_whois = "on"
         $form.Fields.method_peer = ""
         # Submit the form and get our response!
@@ -95,47 +104,56 @@ function Get-IPInfo {
         # Output is piped to Out-Null, otherwise it returns the string "True" to indicate that a match was found.
         $response.Content -match '(\d+?)\s+?\|\s(.+?)\s+\|\s(.+?)\s+\|\s(.+?)\s+\|\s(.+?)\s+\|\s(.+?)\s+\|\s(.+)' | Out-Null
 
-        # Build a custom object with our collected info
-        $object = [PSCustomObject]@{
-            IPAddress = $_
-            Network = "$($net.netBlocks.netBlock.startAddress)/$($net.netBlocks.netBlock.cidrLength)"
-            Organization = $org.name
-            City = $org.city
-            Region = $org.'iso3166-2'
-            Country = $org.'iso3166-1'.name
-            ASN = $Matches[1]
-            ASNOrg = $Matches[7]
-            ASNRegistry = $Matches[5]
-            ASNRoute = $Matches[3]
-            WHOIS = "https://search.arin.net/rdap/?query=$_"
+        If ($PassThru) {
+          $object = $IPAddress
+          $propertyPrefix = "ipinfo_"
+        }
+        Else {
+          $object = [PSCustomObject]@{}
+          $propertyPrefix = ""
+        }
 
-          }
+        # Build a custom object with our collected info
+        $object | 
+            Add-Member -PassThru -NotePropertyName "$($propertyPrefix)IPAddress" -NotePropertyValue $strIPAddress |
+            Add-Member -PassThru -NotePropertyName "$($propertyPrefix)Network" -NotePropertyValue "$($net.netBlocks.netBlock.startAddress)/$($net.netBlocks.netBlock.cidrLength)" |
+            Add-Member -PassThru -NotePropertyName "$($propertyPrefix)Organization" -NotePropertyValue $org.name |
+            Add-Member -PassThru -NotePropertyName "$($propertyPrefix)City" -NotePropertyValue $org.city |
+            Add-Member -PassThru -NotePropertyName "$($propertyPrefix)Region" -NotePropertyValue $org.'iso3166-2' |
+            Add-Member -PassThru -NotePropertyName "$($propertyPrefix)Country" -NotePropertyValue $org.'iso3166-1'.name |
+            Add-Member -PassThru -NotePropertyName "$($propertyPrefix)ASN" -NotePropertyValue $Matches[1] |
+            Add-Member -PassThru -NotePropertyName "$($propertyPrefix)ASNOrg" -NotePropertyValue $Matches[7] |
+            Add-Member -PassThru -NotePropertyName "$($propertyPrefix)ASNRegistry" -NotePropertyValue $Matches[5] |
+            Add-Member -PassThru -NotePropertyName "$($propertyPrefix)ASNRoute" -NotePropertyValue $Matches[3] |
+            Add-Member -NotePropertyName "$($propertyPrefix)WHOIS" -NotePropertyValue "https://search.arin.net/rdap/?query=$strIPAddress" 
+
+          
 
         # If an API key for AbuseIPDB is specified, fetch abuse info
         If ($APIKeyAbuseIP) {
-          $abuseDB = Invoke-WebRequest -Headers @{accept="application/json";key=$APIKeyAbuseIP} -Uri https://api.abuseipdb.com/api/v2/check?ipAddress=$_"&"verbose"&"maxAgeInDays=$maxReportAge |
+          $abuseDB = Invoke-WebRequest -Headers @{accept="application/json";key=$APIKeyAbuseIP} -Uri https://api.abuseipdb.com/api/v2/check?ipAddress=$strIPAddress"&"verbose"&"maxAgeInDays=$maxReportAge |
             ConvertFrom-Json | select-object -expand data
 
           # And add the abuse info to the output $object
           $object | Add-Member -NotePropertyMembers @{
-            AbuseDBUsageType = $abuseDB.usageType
-            AbuseDBConfidenceScore = $abuseDB.abuseConfidenceScore
-            AbuseDBDomain = $abuseDB.domain
-            AbuseDBHostnames = $abuseDB.hostnames
-            AbuseDBTotalReports = $abuseDB.totalReports
-            AbuseDBLastReported = $abuseDB.lastReportedAt
-            AbuseDBReports = $abuseDB.reports
+            ipinfo_AbuseDBUsageType = $abuseDB.usageType
+            ipinfo_AbuseDBConfidenceScore = $abuseDB.abuseConfidenceScore
+            ipinfo_AbuseDBDomain = $abuseDB.domain
+            ipinfo_AbuseDBHostnames = $abuseDB.hostnames
+            ipinfo_AbuseDBTotalReports = $abuseDB.totalReports
+            ipinfo_AbuseDBLastReported = $abuseDB.lastReportedAt
+            ipinfo_AbuseDBReports = $abuseDB.reports
           }
 
         }
 
         # Return the object.
-        $lookupCache[$_] = $object
+        $lookupCache[$strIPAddress] = $object
         $object
 
       }
 
-    }
+    #}
   }
 
   END {}
