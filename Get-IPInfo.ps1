@@ -49,7 +49,11 @@ function Get-IPInfo {
 
     BEGIN {
       # Initialize a lookup cache to store the results of each lookup. This way if the same IP address is looked up multiple times, it will return the previous result from the cache.
-      $lookupCache = @{}
+      If (Test-Path $env:TEMP\Justus-Module_get-ipinfo.tmp) {
+        $lookupCache = Import-CSV $env:TEMP\Justus-Module_get-ipinfo.tmp
+      } Else {
+        $lookupCache = @{}
+      }
 
       # If -IPAddress isn't specified, fetch current public IP from icanhazip.com and use that instead.
       # I'm using icanhazip.com because despite the...dated...name, it's been taken over by Cloudflare
@@ -74,7 +78,7 @@ function Get-IPInfo {
       }
 
       If ($lookupCache[$strIPAddress]) {
-        $lookupCache[$strIPAddress]
+        $objIPInfo = $lookupCache[$strIPAddress]
       } Else {
 
         # Get the network info from ARIN
@@ -113,6 +117,20 @@ function Get-IPInfo {
           $propertyPrefix = ""
         }
 
+        # Build a custom object with our collected info
+        $objIPInfo = [PSCustomObject]@{ 
+            IPAddress = $strIPAddress
+            Network = "$($net.netBlocks.netBlock.startAddress)/$($net.netBlocks.netBlock.cidrLength)"
+            Organization = $org.name
+            City = $org.city
+            Region = $org.'iso3166-2'
+            Country = $org.'iso3166-1'.name
+            ASN = $Matches[1]
+            ASNOrg = $Matches[7]
+            ASNRegistry = $Matches[5]
+            ASNRoute = $Matches[3]
+            WHOIS = "https://search.arin.net/rdap/?query=$strIPAddress"
+        }
         # Build a custom object with our collected info
         $object | 
             Add-Member -PassThru -NotePropertyName "$($propertyPrefix)IPAddress" -NotePropertyValue $strIPAddress |
