@@ -50,7 +50,7 @@ function Get-IPInfo {
     BEGIN {
       # Initialize a lookup cache to store the results of each lookup. This way if the same IP address is looked up multiple times, it will return the previous result from the cache.
       If (Test-Path $env:TEMP\Justus-Module_get-ipinfo.tmp) {
-        $lookupCache = Import-CSV $env:TEMP\Justus-Module_get-ipinfo.tmp
+        $lookupCache = Import-Clixml $env:TEMP\Justus-Module_get-ipinfo.tmp
       } Else {
         $lookupCache = @{}
       }
@@ -69,18 +69,19 @@ function Get-IPInfo {
     }
 
   PROCESS {
-    #$IPAddress | ForEach-Object {
 
+      # If a -Property is specified, then assume that we're dealing with an input object
+      # rather than just a simple array of IP addresses, and we need to know which property
+      # of the input object contains the IP address.
       If ($Property) {
         $strIPAddress = $IPAddress.$($Property)
+      # Otherwise just use the full input string as the IP address.
       } Else {
         $strIPAddress = $IPAddress[0]
       }
 
-      If ($lookupCache[$strIPAddress]) {
-        $objIPInfo = $lookupCache[$strIPAddress]
-      } Else {
-
+      # Perform the lookup if the lookup is not already cached. Also perform the lookup if it IS cached, but an AbuseIPDB lookup is requested and THAT isn't cached.
+      If ((-Not ($lookupCache[$strIPAddress])) -Or ($APIKeyAbuseIP -And (-Not ($lookupCache[$strIPAddress].PSObject.Properties.name -contains "AbuseDBTotalReports")))) {
         # Get the network info from ARIN
         $net = [xml]$(Invoke-WebRequest http://whois.arin.net/rest/ip/$strIPAddress) | Select-Object -expand Net
         # Get the organization associated with the network from ARIN
@@ -108,14 +109,6 @@ function Get-IPInfo {
         # Output is piped to Out-Null, otherwise it returns the string "True" to indicate that a match was found.
         $response.Content -match '(\d+?)\s+?\|\s(.+?)\s+\|\s(.+?)\s+\|\s(.+?)\s+\|\s(.+?)\s+\|\s(.+?)\s+\|\s(.+)' | Out-Null
 
-        If ($PassThru) {
-          $object = $IPAddress
-          $propertyPrefix = "ipinfo_"
-        }
-        Else {
-          $object = [PSCustomObject]@{}
-          $propertyPrefix = ""
-        }
 
         # Build a custom object with our collected info
         $objIPInfo = [PSCustomObject]@{ 
@@ -131,20 +124,6 @@ function Get-IPInfo {
             ASNRoute = $Matches[3]
             WHOIS = "https://search.arin.net/rdap/?query=$strIPAddress"
         }
-        # Build a custom object with our collected info
-        $object | 
-            Add-Member -PassThru -NotePropertyName "$($propertyPrefix)IPAddress" -NotePropertyValue $strIPAddress |
-            Add-Member -PassThru -NotePropertyName "$($propertyPrefix)Network" -NotePropertyValue "$($net.netBlocks.netBlock.startAddress)/$($net.netBlocks.netBlock.cidrLength)" |
-            Add-Member -PassThru -NotePropertyName "$($propertyPrefix)Organization" -NotePropertyValue $org.name |
-            Add-Member -PassThru -NotePropertyName "$($propertyPrefix)City" -NotePropertyValue $org.city |
-            Add-Member -PassThru -NotePropertyName "$($propertyPrefix)Region" -NotePropertyValue $org.'iso3166-2' |
-            Add-Member -PassThru -NotePropertyName "$($propertyPrefix)Country" -NotePropertyValue $org.'iso3166-1'.name |
-            Add-Member -PassThru -NotePropertyName "$($propertyPrefix)ASN" -NotePropertyValue $Matches[1] |
-            Add-Member -PassThru -NotePropertyName "$($propertyPrefix)ASNOrg" -NotePropertyValue $Matches[7] |
-            Add-Member -PassThru -NotePropertyName "$($propertyPrefix)ASNRegistry" -NotePropertyValue $Matches[5] |
-            Add-Member -PassThru -NotePropertyName "$($propertyPrefix)ASNRoute" -NotePropertyValue $Matches[3] |
-            Add-Member -NotePropertyName "$($propertyPrefix)WHOIS" -NotePropertyValue "https://search.arin.net/rdap/?query=$strIPAddress" 
-
           
 
         # If an API key for AbuseIPDB is specified, fetch abuse info
@@ -153,26 +132,61 @@ function Get-IPInfo {
             ConvertFrom-Json | select-object -expand data
 
           # And add the abuse info to the output $object
-          $object | Add-Member -NotePropertyMembers @{
-            ipinfo_AbuseDBUsageType = $abuseDB.usageType
-            ipinfo_AbuseDBConfidenceScore = $abuseDB.abuseConfidenceScore
-            ipinfo_AbuseDBDomain = $abuseDB.domain
-            ipinfo_AbuseDBHostnames = $abuseDB.hostnames
-            ipinfo_AbuseDBTotalReports = $abuseDB.totalReports
-            ipinfo_AbuseDBLastReported = $abuseDB.lastReportedAt
-            ipinfo_AbuseDBReports = $abuseDB.reports
+          $objIPInfo | Add-Member -NotePropertyMembers @{
+            AbuseDBUsageType = $abuseDB.usageType
+            AbuseDBConfidenceScore = $abuseDB.abuseConfidenceScore
+            AbuseDBDomain = $abuseDB.domain
+            AbuseDBHostnames = $abuseDB.hostnames
+            AbuseDBTotalReports = $abuseDB.totalReports
+            AbuseDBLastReported = $abuseDB.lastReportedAt
+            AbuseDBReports = $abuseDB.reports
           }
 
         }
 
-        # Return the object.
-        $lookupCache[$strIPAddress] = $object
-        $object
+        # Cache the results
+        $lookupCache[$strIPAddress] = $objIPInfo
 
+      } Else {
+        $objIPInfo = $lookupCache[$strIPAddress]
       }
 
-    #}
+      # If an AbuseIPDB API key has not been specified, then exclude those properties from the output.
+      # This prevents them being returned if they were looked up previously and cached.
+      If (-Not($EnvAPIKeyAbuseIP)) {
+        $objIPInfo = $objIPInfo | Select -Property * -ExcludeProperty AbuseDB*
+      }
+
+      If ($PassThru) {
+
+        # If we're passing through an input object, create a copy of it so we can modify it
+        # and pass it back out.
+        # We're making the copy in this dumb way, because if we just do
+        # $objReturn = $IPAddress, then PowerShell overwrites the content of the input object.
+        # This is because objects are passed by reference, not by value.
+        $objReturn = New-Object PSObject
+        $IPAddress.PSObject.Properties | ForEach {
+          If ($_.MemberType -eq "NoteProperty") {
+            $objReturn | Add-Member -NotePropertyName $_.Name -NotePropertyValue $_.Value
+          }
+        }
+
+        # If we're passing through an input object, prepend a string to the property names so
+        # we don't clash with existing properties in the input object.
+        $propertyPrefix = "ipinfo_"
+        $objIPInfo.PSObject.Properties | ForEach-Object {
+          $objReturn | Add-Member -NotePropertyName "$($propertyPrefix)$($_.Name)" -NotePropertyValue $_.Value 
+        }
+        $objReturn
+
+      }
+      Else {
+        $objIPInfo
+      }
+
   }
 
-  END {}
+  END {
+      $lookupCache | Export-Clixml $env:TEMP\Justus-Module_get-ipinfo.tmp -Force 
+    }
 }
