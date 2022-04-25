@@ -99,7 +99,7 @@ function Get-IPInfo {
         $strIPAddress = $IPAddress[0]
       }
 
-      # Perform the lookup if the lookup is not already cached. Also perform the lookup if it IS cached, but an AbuseIPDB lookup is requested and THAT isn't cached.
+      # Perform the lookup if the lookup is not already cached. Also perform the lookup if it IS cached, but an AbuseIPDB lookup is requested and THAT isn't cached. Also perform the lookup if it's cached, but the existing lookupCachewas performed more than $CacheLifetimeHours hours ago.
       If ((-Not ($lookupCache[$strIPAddress])) -Or ($APIKeyAbuseIP -And (-Not ($lookupCache[$strIPAddress].PSObject.Properties.name -contains "AbuseDBTotalReports"))) -Or ($lookupCache[$strIPAddress].LookupTimestamp -lt $(Get-Date).AddHours(-$CacheLifetimeHours))) {
         # Get the network info from ARIN
         $net = [xml]$(Invoke-WebRequest http://whois.arin.net/rest/ip/$strIPAddress) | Select-Object -expand Net
@@ -110,7 +110,6 @@ function Get-IPInfo {
         } ElseIf ($net.customerRef."#text") {
           $org = [xml]$(Invoke-WebRequest $($net.customerRef."#text")) | Select-Object -expand customer
         }
-
 
         # Get associated ASN info from cymru.com.
         # whois.cymru.com doesn't supply an API we can use, so we'll scrape the HTML instead.
@@ -143,7 +142,6 @@ function Get-IPInfo {
             ASNRoute = $Matches[3]
             WHOIS = "https://search.arin.net/rdap/?query=$strIPAddress"
         }
-          
 
         # If an API key for AbuseIPDB is specified, fetch abuse info
         If ($APIKeyAbuseIP) {
@@ -178,7 +176,6 @@ function Get-IPInfo {
       }
 
       If ($PassThru) {
-
         # If we're passing through an input object, create a copy of it so we can modify it
         # and pass it back out.
         # We're making the copy in this dumb way, because if we just do
@@ -197,7 +194,6 @@ function Get-IPInfo {
           $objReturn | Add-Member -NotePropertyName "$($PropertyPrefix)$($_.Name)" -NotePropertyValue $_.Value 
         }
         $objReturn
-
       }
       Else {
         $objIPInfo
