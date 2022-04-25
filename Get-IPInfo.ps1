@@ -193,9 +193,8 @@ function Get-IPInfo {
 
         # If we're passing through an input object, prepend a string to the property names so
         # we don't clash with existing properties in the input object.
-        $propertyPrefix = "ipinfo_"
         $objIPInfo.PSObject.Properties | ForEach-Object {
-          $objReturn | Add-Member -NotePropertyName "$($propertyPrefix)$($_.Name)" -NotePropertyValue $_.Value 
+          $objReturn | Add-Member -NotePropertyName "$($PropertyPrefix)$($_.Name)" -NotePropertyValue $_.Value 
         }
         $objReturn
 
