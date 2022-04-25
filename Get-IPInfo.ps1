@@ -46,7 +46,7 @@ function Get-IPInfo {
     param (
         [Parameter(ValueFromPipeline=$true)]
         # Specify the IP address(s)
-        [array]$IPAddress,
+        $IPAddress,
         # Specify optional abuseipdb.com API key to return abuse info
         [string]$APIKeyAbuseIP,
         # Indicate that abuseipdb.com API key should be read from $Env:APIKeyAbuseIP environment variable. More convenient than providing it via the -APIKey parameter each time
