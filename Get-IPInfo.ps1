@@ -7,9 +7,9 @@ function Get-IPInfo {
     Gets info about the provided IP address.
 
     .Description
-    This cmdlet queries various sources (currently ARIN and asn.cymru.com, and optionally abuseipdb.com) for information about a given IP, including WHOIS and ASN info.
+    This cmdlet queries various sources (currently ARIN and asn.cymru.com, and optionally abuseipdb.com) for information about a given IP, including WHOIS and ASN info. It caches results (by default) for 24 hours to increase lookup speed and reduce API usage.
 
-    Can accept multiple IP addresses in an array as pipeline input. See examples.
+    Can accept an array of IP addresses or an object as pipeline input. See examples.
 
     If you pass in an AbuseIPDB API key using the -APIKeyAbuseIP parameter, it will also return reported abuse information. A free API key can be obtained by visiting abuseipdb.com.
 
@@ -28,9 +28,19 @@ function Get-IPInfo {
     Returns abuse info from abuseipdb.com. Go to abuseipdb.com to register for a free API key (up to 1000 checks/day).
 
     .Example
-    Import-Csv .\IOCs.csv | ? {$_.type -eq "ip-dst"} | select -expand value | get-ipinfo | ft
+    Import-Csv .\IOCs.csv | Get-IPInfo -Property "IP address"
 
-    Get list of IPs from CSV.
+    In this example, the CSV contains a column mamed "IP address" which contains the 
+    IP addresses we want to look up.
+
+    .Example
+    Import-Csv .\IOCs.csv | Get-IPInfo -Property "IP address" -PassThru | export-csv .\IOCs-with-IPInfo.csv
+
+    The -PassThru takes the input object, adds the IP lookup info to it, and passes the whole thing back out
+    the other side. This is useful for e.g. adding IP lookup info to an existing spreadsheet.
+
+    Note that the property names are prepended with "ipinfo_" to avoid conflicts with existing column names.
+    This prefix can be changed using the "-PropertyPrefix" parameter.
 
 #>
     param (
@@ -43,8 +53,17 @@ function Get-IPInfo {
         [switch]$EnvAPIKeyAbuseIP,
         # If fetching abuse info, specify the maximum report age to include (default 60 days)
         [int]$maxReportAge = 60,
+        # If piping in an object or hashtable with multiple properties (rather than a simple array of IP addresses), specify which property
+        # contains the IP address
         [string]$Property,
-        [switch]$PassThru
+        # Take the input object, add the IP lookup results, and spit the whole thing back out the other side. This is useful for e.g. adding IP lookup info to an existing spreadsheet.
+        [switch]$PassThru,
+        # When using -PassThru, by default the IPInfo property names are prefixed with "ipinfo_" to avoid conflicts with existing property names in the input object. This parameter
+        # can be used to change the prefix, or to eliminate it with -Property Prefix ""
+        [string]$PropertyPrefix = "ipinfo_",
+        # By default, cached results are considered good for 24 hours. If a cached result is greater than 24 hours old, a new lookup will be preformed and the results cached. The lifetime can
+        # be changed with this parameter.
+        [int]$CacheLifetimeHours = 24
         )
 
     BEGIN {
@@ -81,7 +100,7 @@ function Get-IPInfo {
       }
 
       # Perform the lookup if the lookup is not already cached. Also perform the lookup if it IS cached, but an AbuseIPDB lookup is requested and THAT isn't cached.
-      If ((-Not ($lookupCache[$strIPAddress])) -Or ($APIKeyAbuseIP -And (-Not ($lookupCache[$strIPAddress].PSObject.Properties.name -contains "AbuseDBTotalReports")))) {
+      If ((-Not ($lookupCache[$strIPAddress])) -Or ($APIKeyAbuseIP -And (-Not ($lookupCache[$strIPAddress].PSObject.Properties.name -contains "AbuseDBTotalReports"))) -Or ($lookupCache[$strIPAddress].LookupTimestamp -lt $(Get-Date).AddHours(-$CacheLifetimeHours))) {
         # Get the network info from ARIN
         $net = [xml]$(Invoke-WebRequest http://whois.arin.net/rest/ip/$strIPAddress) | Select-Object -expand Net
         # Get the organization associated with the network from ARIN
@@ -145,6 +164,7 @@ function Get-IPInfo {
         }
 
         # Cache the results
+        $objIPInfo | Add-Member -NotePropertyName "LookupTimestamp" -NotePropertyValue $(Get-Date)
         $lookupCache[$strIPAddress] = $objIPInfo
 
       } Else {
@@ -187,6 +207,7 @@ function Get-IPInfo {
   }
 
   END {
-      $lookupCache | Export-Clixml $env:TEMP\Justus-Module_get-ipinfo.tmp -Force 
+        $lookupCache | Export-Clixml $env:TEMP\Justus-Module_get-ipinfo.tmp -Force 
     }
+
 }
