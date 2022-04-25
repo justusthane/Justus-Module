@@ -1,4 +1,5 @@
 # TODO
+# - If an API lookup fails, return the cached record even if it's stale
 # - Use ARIN's RDAP API instead of RWS, which is deprecated
 
 function Get-IPInfo {
