@@ -97,7 +97,7 @@ function Get-IPInfo {
         $strIPAddress = $IPAddress.$($Property)
       # Otherwise just use the full input string as the IP address.
       } Else {
-        $strIPAddress = $IPAddress[0]
+        $strIPAddress = $IPAddress
       }
 
       # Perform the lookup if the lookup is not already cached. Also perform the lookup if it IS cached, but an AbuseIPDB lookup is requested and THAT isn't cached. Also perform the lookup if it's cached, but the existing lookupCachewas performed more than $CacheLifetimeHours hours ago.
