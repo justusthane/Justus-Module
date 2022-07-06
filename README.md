@@ -47,14 +47,19 @@ Returns the status of all mailboxes in a given migration batch, including whethe
 ### Get-SkippedItem
 Returns all skipped items for all mailboxes in a given migration batch.
 
-### Start-ADSync Initiates an Azure AD sync on the target server (target server
-must be running the AD Sync application).
+### Start-ADSync 
+Initiates an Azure AD sync on the target server (target server must be running the AD Sync application).
 
-```powershell Start-ADSync -ComputerName ad-connect ```
+```
+powershell Start-ADSync -ComputerName ad-connect 
+```
 
-### Out-VisiData Allows cmdlet output to be piped to VisiData on Windows
-(requires [VisiData](https://www.visidata.org) to be installed---see **Get-Help
-Out-VisiData** for more info).
+### Out-VisiData 
+Allows cmdlet output to be piped to VisiData on Windows
+(requires [VisiData](https://www.visidata.org) to be installed---see **Get-Help Out-VisiData** for more info).
+
+### Set-PFXCertOrder
+When exporting a complete certificate chain to a .pfx file (PKCS12), Windows has an annoying habit of not saving them in the correct order (Root -> Intermediate -> Server). This cmdlet makes it easy to reorder an existing .pfx.
 
 
 ## Coming Soon
