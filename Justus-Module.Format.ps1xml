@@ -67,58 +67,58 @@
 			<TableControl>
 				<TableHeaders>
 					<TableColumnHeader>
-						<Label>Name</Label>
-						<Width>40</Width>
+						<Label>IPAddress</Label>
+						<Width>14</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>ClientID</Label>
+						<Width>17</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>HostName</Label>
+						<Width>20</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>AddressState</Label>
+						<Width>10</Width>
+					</TableColumnHeader>
+					<TableColumnHeader>
+						<Label>LeaseExpiryTime</Label>
+						<Width>25</Width>
 					</TableColumnHeader>
 					<TableColumnHeader>
 						<Label>ScopeID</Label>
 						<Width>14</Width>
 					</TableColumnHeader>
 					<TableColumnHeader>
-						<Label>SubnetMask</Label>
-						<Width>14</Width>
-					</TableColumnHeader>
-					<TableColumnHeader>
-						<Label>State</Label>
-						<Width>10</Width>
-					</TableColumnHeader>
-					<TableColumnHeader>
-						<Label>StartRange</Label>
-						<Width>14</Width>
-					</TableColumnHeader>
-					<TableColumnHeader>
-						<Label>EndRange</Label>
-						<Width>14</Width>
-					</TableColumnHeader>
-					<TableColumnHeader>
-						<Label>LeaseDuration</Label>
-						<Width>13</Width>
+						<Label>ScopeName</Label>
+						<Width>40</Width>
 					</TableColumnHeader>
 				</TableHeaders>
 				<TableRowEntries>
 					<TableRowEntry>
 						<TableColumnItems>
-							<TableColumnItem>
-								<PropertyName>Name</PropertyName>
-							</TableColumnItem>
-							<TableColumnItem>
-								<PropertyName>ScopeID</PropertyName>
-							</TableColumnItem>
-							<TableColumnItem>
-								<PropertyName>SubnetMask</PropertyName>
-							</TableColumnItem>
-							<TableColumnItem>
-								<PropertyName>State</PropertyName>
-							</TableColumnItem>
-							<TableColumnItem>
-								<PropertyName>StartRange</PropertyName>
-							</TableColumnItem>
-							<TableColumnItem>
-								<PropertyName>EndRange</PropertyName>
-							</TableColumnItem>
-							<TableColumnItem>
-								<PropertyName>LeaseDuration</PropertyName>
-							</TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>IPAddress</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>ClientID</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>HostName</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>AddressState</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>LeaseExpiryTime</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>ScopeID</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>ScopeName</PropertyName>
+              </TableColumnItem>
 						</TableColumnItems>
 					</TableRowEntry>
 				</TableRowEntries>

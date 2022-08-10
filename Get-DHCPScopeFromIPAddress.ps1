@@ -33,7 +33,7 @@ function Get-DHCPScopeFromIPAddress {
         $arguments.Add("ComputerName", $ComputerName)
         }
 
-        $output = Get-DHCPServerv4Lease @arguments | ForEach { Get-DHCPServerv4Scope $_.ScopeID -ComputerName $arguments.ComputerName } 
+        $output = Get-DHCPServerv4Lease @arguments | Select -Property *,@{l="ScopeName";e={$(Get-DHCPServerv4Scope $_.ScopeID -ComputerName $arguments.ComputerName).Name}} 
         $output.PSObject.TypeNames.Insert(0, 'Justus-Module.Get-DHCPScopeFromIPAddress.Output')
         $output
 
