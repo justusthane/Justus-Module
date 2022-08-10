@@ -60,9 +60,9 @@
 			</TableControl>
 		</View>
 		<View>
-			<Name>Justus-Module.Get-DHCPScopeFromIPAddress.Output</Name>
+			<Name>Justus-Module.Get-DHCPLeaseInfo.Output</Name>
 			<ViewSelectedBy>
-				<TypeName>Justus-Module.Get-DHCPScopeFromIPAddress.Output</TypeName>
+				<TypeName>Justus-Module.Get-DHCPLeaseInfo.Output</TypeName>
 			</ViewSelectedBy>
 			<TableControl>
 				<TableHeaders>

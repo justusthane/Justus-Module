@@ -1,4 +1,4 @@
-function Get-DHCPScopeFromIPAddress {
+function Get-DHCPLeaseInfo {
   <#
     .Synopsis
     Find the DHCP scope that given IP address is part of.
@@ -34,7 +34,7 @@ function Get-DHCPScopeFromIPAddress {
         }
 
         $output = Get-DHCPServerv4Lease @arguments | Select -Property *,@{l="ScopeName";e={$(Get-DHCPServerv4Scope $_.ScopeID -ComputerName $arguments.ComputerName).Name}} 
-        $output.PSObject.TypeNames.Insert(0, 'Justus-Module.Get-DHCPScopeFromIPAddress.Output')
+        $output.PSObject.TypeNames.Insert(0, 'Justus-Module.Get-DHCPLeaseInfo.Output')
         $output
 
     }
