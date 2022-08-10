@@ -61,6 +61,9 @@ Allows cmdlet output to be piped to VisiData on Windows
 ### Set-PFXCertOrder
 When exporting a complete certificate chain to a .pfx file (PKCS12), Windows has an annoying habit of not saving them in the correct order (Root -> Intermediate -> Server). This cmdlet makes it easy to reorder an existing .pfx.
 
+### Get-DHCPScopeFromIPAddress
+Find the DHCP scope that given IP address is part of.
+
 
 ## Coming Soon
 ...?
