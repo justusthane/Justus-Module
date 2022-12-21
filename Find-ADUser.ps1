@@ -68,7 +68,7 @@ function Find-ADUser {
         }
       }
       Catch {
-        "Error - connected to MSOL?"
+        "Error - connected to MSOL? Run Connect-MsolService"
       }
     }
     $AdditionalProperties = ("DisplayName","SAMAccountName","UserPrincipalName","Description","PasswordLastSet","PasswordExpired","Enabled","LockedOut","ObjectGUID") + $Properties
