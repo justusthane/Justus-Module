@@ -1,7 +1,7 @@
 function Write-VMRDPConnection {
 <#
   .Synopsis
-  Generate RDP connection files and a spreadsheet for all powered-on Windows VMs, divided by resource pool.
+  Generate RDP connection files, RDCMan *.rdg connection file, and a spreadsheet for all powered-on Windows VMs, divided by resource pool.
 
   .Description
   This cmdlet fetches all powered on Windows servers from vSphere and creates an RDP file for each one, divided by resource pool. It also writes a spreadsheet for each resource pool, meant to facilitate performing and tracking Windows Updates.
@@ -144,15 +144,40 @@ function Write-VMRDPConnection {
       } Else {
         $directory = New-Item -ItemType Directory -Path $OutputFolderObj.FullName -Name $_.Name
       }
+      # Create XML file for RDCMan
+      $XmlWriter = New-Object System.Xml.XmlTextWriter("$($directory.FullName)\$($_.Name).rdg",$Null)
+      $XmlWriter.Formatting = "Indented"
+      $XmlWriter.Indentation = 1
+      $XmlWriter.IndentChar = "`t"
+      $XmlWriter.WriteStartDocument()
+      $XmlWriter.WriteStartElement('RDCMan')
+      $XmlWriter.WriteAttributeString('programVersion','2.90')
+      $XmlWriter.WriteAttributeString('schemaVersion','3')
+      $XmlWriter.WriteStartElement('file')
+      $XmlWriter.WriteStartElement('credentialsProfiles')
+      $XmlWriter.WriteEndElement()
+      $XmlWriter.WriteStartElement('properties')
+      $XmlWriter.WriteElementString('expanded','False')
+      $XmlWriter.WriteElementString('name',$_.Name)
+      $XmlWriter.WriteEndElement()
       # Initialize an empty array for the spreadsheet for the current resource pool
       $vmInfo = @()
       #Get all VMs in the current resource pool
       $_ | get-vm | ForEach-Object {
         If (($_.PowerState -eq "PoweredOn") -And ($_.GuestID -like "*Windows*")) {
+          $XmlWriter.WriteStartElement('server')
+          $XmlWriter.WriteStartElement('properties')
+          $XmlWriter.WriteElementString('name',$_.Name)
+          $XmlWriter.WriteEndElement()
+          $XmlWriter.WriteEndElement()
           $vmInfo += $_ | Select-Object Name,"Checking","Up-to-Date","Downloading","Installing","Pending Reboot","Rebooted","Done","Notes","ERROR"
           $rdpParameters + "full address:s:$($_.Name)" | Out-File "$($directory.FullName)\$($_.Name).rdp"
         }
       }
+      $XmlWriter.WriteEndElement()
+      $XmlWriter.WriteEndDocument()
+      $XmlWriter.Flush()
+      $XmlWriter.Close()
       $vmInfo | Sort-Object Name | Export-Csv -Path "$($directory.FullName)\$($_.Name).csv" -NoTypeInformation
     }
   }

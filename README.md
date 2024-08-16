@@ -28,7 +28,7 @@ A cute little helper cmdlet that takes the pain out of generating new arrays on 
 Given an input object, returns only unique combinations of the specified properties.
 
 ### Write-VMRDPConnection
-Generates RDP connections and a spreadsheet for all Windows VMs in specific (or all) resource pools. Useful for making Windows Server updates easier.
+Generates RDP connections, RDCMan .rdg connection file, and a spreadsheet for all Windows VMs in specific (or all) resource pools. Useful for making Windows Server updates easier.
 
 ### Remove-BarracudaEmail
 Takes a CSV of delivered emails from Barracuda and removes them from Exchange mailboxes. Works both on-prem and on O365, but has to be run separately in each premise.
@@ -62,7 +62,10 @@ Allows cmdlet output to be piped to VisiData on Windows
 When exporting a complete certificate chain to a .pfx file (PKCS12), Windows has an annoying habit of not saving them in the correct order (Root -> Intermediate -> Server). This cmdlet makes it easy to reorder an existing .pfx.
 
 ### Get-DHCPLeaseInfo
-Find the DHCP scope that given IP address is part of.
+Gets info about the current DHCP lease for the specified IP addresses.
+
+### Get-DHCPScopeFromIPAddress
+Finds the DHCP scope that the specified IP address belongs to.
 
 
 ## Coming Soon
