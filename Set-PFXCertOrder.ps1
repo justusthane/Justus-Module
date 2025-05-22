@@ -14,14 +14,16 @@ function Set-PFXCertOrder {
       }
       Return $True
     })]
-    # Specify path to existing PFX
+    # Specify path to existing PFX (absolute paths only)
     [System.IO.FileInfo]$Path,
-    # Path to save new PFX as
+    # Path to save new PFX as (absolute paths only)
     [System.IO.FileInfo]$NewPath,
     # Passphrase for PFX
     [string]$Passphrase
   )
   $ErrorActionPreference = "Stop"
+  # Convert relative path to abosolute path, because [Security.Cryptography.X509Certificates.X509Certificate2Collection] requires an absolute path.
+  $Path = (Get-Item $Path).FullName
 
   function Out-PFX {
     param (
